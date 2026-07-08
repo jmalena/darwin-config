@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/aleph/Desktop/Projekty/darwin-config status)",
+      "Read(//Users/aleph/.ssh/**)",
+      "Bash(ykman info *)",
+      "Bash(ykman fido *)"
+    ]
+  }
+}
