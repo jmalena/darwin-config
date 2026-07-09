@@ -5,6 +5,20 @@ let
     mkdir -p $out
     ${pkgs.imagemagick}/bin/magick -size 5120x2880 xc:black png:$out/black.png
   '';
+
+  # Spotlight results are limited to these menu categories; the rest are hidden.
+  spotlightShown = [ "APPLICATIONS" "SYSTEM_PREFS" ];
+  spotlightHidden = [
+    "MENU_EXPRESSION" "CONTACT" "MENU_CONVERSION" "MENU_DEFINITION"
+    "DOCUMENTS" "EVENT_TODO" "DIRECTORIES" "FONTS" "IMAGES" "MESSAGES"
+    "MOVIES" "MUSIC" "MENU_OTHER" "PDF" "PRESENTATIONS"
+    "MENU_SPOTLIGHT_SUGGESTIONS" "SPREADSHEETS" "TIPS" "BOOKMARKS"
+  ];
+  spotlightItem = enabled: name:
+    "'{ enabled = ${if enabled then "1" else "0"}; name = \"${name}\"; }'";
+  spotlightItems = lib.concatStringsSep " " (
+    map (spotlightItem true) spotlightShown ++ map (spotlightItem false) spotlightHidden
+  );
 in
 {
   programs.zsh.enable = true;
@@ -108,28 +122,7 @@ in
     asuser /usr/bin/osascript -e \
       'tell application "System Events" to tell every desktop to set picture to "${blackWallpaper}/black.png"' || true
 
-    asuser defaults -currentHost write com.apple.Spotlight orderedItems -array \
-      '{ enabled = 1; name = "APPLICATIONS"; }' \
-      '{ enabled = 1; name = "SYSTEM_PREFS"; }' \
-      '{ enabled = 0; name = "MENU_EXPRESSION"; }' \
-      '{ enabled = 0; name = "CONTACT"; }' \
-      '{ enabled = 0; name = "MENU_CONVERSION"; }' \
-      '{ enabled = 0; name = "MENU_DEFINITION"; }' \
-      '{ enabled = 0; name = "DOCUMENTS"; }' \
-      '{ enabled = 0; name = "EVENT_TODO"; }' \
-      '{ enabled = 0; name = "DIRECTORIES"; }' \
-      '{ enabled = 0; name = "FONTS"; }' \
-      '{ enabled = 0; name = "IMAGES"; }' \
-      '{ enabled = 0; name = "MESSAGES"; }' \
-      '{ enabled = 0; name = "MOVIES"; }' \
-      '{ enabled = 0; name = "MUSIC"; }' \
-      '{ enabled = 0; name = "MENU_OTHER"; }' \
-      '{ enabled = 0; name = "PDF"; }' \
-      '{ enabled = 0; name = "PRESENTATIONS"; }' \
-      '{ enabled = 0; name = "MENU_SPOTLIGHT_SUGGESTIONS"; }' \
-      '{ enabled = 0; name = "SPREADSHEETS"; }' \
-      '{ enabled = 0; name = "TIPS"; }' \
-      '{ enabled = 0; name = "BOOKMARKS"; }' || true
+    asuser defaults -currentHost write com.apple.Spotlight orderedItems -array ${spotlightItems} || true
     asuser killall Spotlight || true
   '';
 }
