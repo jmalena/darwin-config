@@ -81,5 +81,5 @@ nix build .#darwinConfigurations.eigen.system
 | `modules/home/dev.nix` | Global editor tooling: LSPs, formatters, linters. |
 | `modules/home/git.nix` | Git: delta, difftastic, ignores, aliases, YubiKey signing. |
 | `modules/home/shell.nix` | zsh, starship, fzf, zoxide, direnv, bat, eza. |
-| `modules/home/emacs.nix` | Emacs (`emacs-macport`), daemon, `init.el` symlink. |
+| `modules/home/emacs.nix` | Emacs: terminal/daemon (`emacs-nox`), GUI via Homebrew cask, `init.el` symlink. |
 | `modules/home/emacs/init.el` | Emacs config (vendored from `jmalena/init.el`). |
