@@ -20,7 +20,7 @@ in
     allowSigned = true;
     allowSignedApp = true;
     blockAllIncoming = false;
-    enableStealthMode = false;
+    enableStealthMode = true;
   };
 
   system.defaults = {
