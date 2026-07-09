@@ -43,6 +43,9 @@ fi
 # --- screenshots dir (screencapture.location points here) -----------------
 mkdir -p "$HOME/Screenshots"
 
+# --- projects dir (~proj / rebuild alias / sidebar point here) ------------
+mkdir -p "$HOME/Projects"
+
 # --- YubiKey FIDO2 key (guided, only if missing) --------------------------
 if [ ! -f "${SK_KEY}.pub" ]; then
   info "No FIDO2 SSH key at ${SK_KEY}.pub."
