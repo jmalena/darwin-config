@@ -49,7 +49,6 @@ in
         "/Applications/Google Chrome.app"
         "/System/Applications/Utilities/Terminal.app"
         "/Applications/Emacs.app"
-        "/Applications/Docker.app"
         "/Applications/Spotify.app"
         "/System/Applications/System Settings.app"
       ];
