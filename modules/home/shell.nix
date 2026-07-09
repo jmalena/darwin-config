@@ -14,9 +14,7 @@
       extended = true;
     };
 
-    # `ls`/`ll`/`la`/`lt` are provided by the eza module's zsh integration.
     shellAliases = {
-      cat = "bat";
       rebuild = "sudo darwin-rebuild switch --flake ~/Desktop/Projekty/darwin-config#eigen";
     };
 
@@ -25,43 +23,9 @@
     };
   };
 
-  programs.starship = {
-    enable = true;
-    settings = {
-      add_newline = true;
-      direnv.disabled = false;
-      nix_shell.disabled = false;
-    };
-  };
-
-  programs.fzf = {
-    enable = true;
-    enableZshIntegration = true;
-    defaultCommand = "fd --type f --hidden --exclude .git";
-    fileWidget.command = "fd --type f --hidden --exclude .git";
-    changeDirWidget.command = "fd --type d --hidden --exclude .git";
-  };
-
-  programs.zoxide = {
-    enable = true;
-    enableZshIntegration = true;
-  };
-
   programs.direnv = {
     enable = true;
     nix-direnv.enable = true;
-  };
-
-  programs.bat = {
-    enable = true;
-    config.theme = "TwoDark";
-  };
-
-  programs.eza = {
-    enable = true;
-    git = true;
-    icons = "auto";
-    enableZshIntegration = true;
   };
 
   home.sessionVariables = {

@@ -128,13 +128,14 @@ in
     asuser defaults -currentHost write com.apple.Spotlight orderedItems -array ${spotlightItems} || true
     asuser killall Spotlight || true
 
-    # Terminal.app: treat Option as Meta on the default profile only (Alt+key sends
-    # Meta instead of composing "@" etc.). No declarative option exists — writing the
-    # whole "Window Settings" dict via CustomUserPreferences would wipe other profiles.
+    # Terminal.app: keep Option as a normal modifier on the default profile so it
+    # composes special characters (e.g. Czech accents) instead of sending Meta. No
+    # declarative option exists — writing the whole "Window Settings" dict via
+    # CustomUserPreferences would wipe other profiles.
     termProfile=$(asuser defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || true)
     [ -n "$termProfile" ] || termProfile="Basic"
     termPlist="/Users/${config.system.primaryUser}/Library/Preferences/com.apple.Terminal.plist"
-    asuser /usr/libexec/PlistBuddy -c "Add :'Window Settings':'$termProfile':useOptionAsMetaKey bool true" "$termPlist" 2>/dev/null \
-      || asuser /usr/libexec/PlistBuddy -c "Set :'Window Settings':'$termProfile':useOptionAsMetaKey true" "$termPlist" || true
+    asuser /usr/libexec/PlistBuddy -c "Add :'Window Settings':'$termProfile':useOptionAsMetaKey bool false" "$termPlist" 2>/dev/null \
+      || asuser /usr/libexec/PlistBuddy -c "Set :'Window Settings':'$termProfile':useOptionAsMetaKey false" "$termPlist" || true
   '';
 }
