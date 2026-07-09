@@ -1,7 +1,7 @@
 { pkgs, config, ... }:
 
 {
-  home.packages = [ pkgs.emacs-macport ];
+  home.packages = [ pkgs.emacs-nox ];
 
   # init.el is vendored from github.com/jmalena/init.el and lives in this repo.
   # An out-of-store symlink keeps it live-editable (no rebuild to iterate) while
@@ -14,7 +14,7 @@
   launchd.agents.emacs = {
     enable = true;
     config = {
-      ProgramArguments = [ "${pkgs.emacs-macport}/bin/emacs" "--daemon" ];
+      ProgramArguments = [ "${pkgs.emacs-nox}/bin/emacs" "--daemon" ];
       RunAtLoad = true;
       KeepAlive = true;
     };
