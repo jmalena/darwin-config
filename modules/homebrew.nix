@@ -20,6 +20,7 @@
     brews = [ ];
 
     casks = [
+      "chatgpt"
       "claude-code"
       "docker-desktop"
       "emacs-app"
