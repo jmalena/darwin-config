@@ -46,7 +46,11 @@ in
 
       persistent-apps = [
         "/Applications/Safari.app"
-        "/System/Applications/Utilities/Terminal.app"
+        "/Applications/Google Chrome.app"
+        "/Applications/Ghostty.app"
+        "/Applications/Emacs.app"
+        "/Applications/Docker.app"
+        "/Applications/Spotify.app"
         "/System/Applications/System Settings.app"
       ];
 
