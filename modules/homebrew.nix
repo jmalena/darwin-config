@@ -22,6 +22,7 @@
     casks = [
       "claude-code"
       "docker-desktop"
+      "emacs-app"
       "figma"
       "ghostty"
       "google-chrome"
