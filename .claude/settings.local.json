@@ -8,7 +8,12 @@
       "Bash(git add *)",
       "Bash(git -c user.name=\"Jonáš Malena\" -c user.email=\"jonas.malena@gmail.com\" commit -m \"feat\\(macos\\): remove docker from dock\")",
       "Read(//System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/**)",
-      "Read(//System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/Contents/MacOS/**)"
+      "Read(//System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/Contents/MacOS/**)",
+      "Bash(sysadminctl -screenLock status)",
+      "Bash(defaults -currentHost read com.apple.screensaver askForPassword)",
+      "Bash(defaults -currentHost read com.apple.screensaver askForPasswordDelay)",
+      "Bash(sysadminctl -screenLock immediate)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }
