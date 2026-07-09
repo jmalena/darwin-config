@@ -31,14 +31,14 @@ in
       tilesize = 48;
 
       persistent-apps = [
-        { path = "/Applications/Safari.app"; }
-        { path = "/System/Applications/Utilities/Terminal.app"; }
-        { path = "/System/Applications/System Settings.app"; }
+        "/Applications/Safari.app"
+        "/System/Applications/Utilities/Terminal.app"
+        "/System/Applications/System Settings.app"
       ];
 
       persistent-others = [
-        { path = "/Users/aleph/Downloads"; displayas = "folder"; showas = "grid"; }
-        { path = "/Applications"; displayas = "folder"; showas = "grid"; }
+        { folder = { path = "/Users/aleph/Downloads"; displayas = "folder"; showas = "grid"; }; }
+        { folder = { path = "/Applications"; displayas = "folder"; showas = "grid"; }; }
       ];
     };
 
