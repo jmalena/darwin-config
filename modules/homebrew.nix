@@ -24,7 +24,6 @@
       "docker-desktop"
       "emacs-app"
       "figma"
-      "ghostty"
       "google-chrome"
       "spotify"
     ];

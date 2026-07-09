@@ -47,7 +47,7 @@ in
       persistent-apps = [
         "/Applications/Safari.app"
         "/Applications/Google Chrome.app"
-        "/Applications/Ghostty.app"
+        "/System/Applications/Utilities/Terminal.app"
         "/Applications/Emacs.app"
         "/Applications/Docker.app"
         "/Applications/Spotify.app"
@@ -128,5 +128,14 @@ in
 
     asuser defaults -currentHost write com.apple.Spotlight orderedItems -array ${spotlightItems} || true
     asuser killall Spotlight || true
+
+    # Terminal.app: treat Option as Meta on the default profile only (Alt+key sends
+    # Meta instead of composing "@" etc.). No declarative option exists — writing the
+    # whole "Window Settings" dict via CustomUserPreferences would wipe other profiles.
+    termProfile=$(asuser defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || true)
+    [ -n "$termProfile" ] || termProfile="Basic"
+    termPlist="/Users/${config.system.primaryUser}/Library/Preferences/com.apple.Terminal.plist"
+    asuser /usr/libexec/PlistBuddy -c "Add :'Window Settings':'$termProfile':useOptionAsMetaKey bool true" "$termPlist" 2>/dev/null \
+      || asuser /usr/libexec/PlistBuddy -c "Set :'Window Settings':'$termProfile':useOptionAsMetaKey true" "$termPlist" || true
   '';
 }
