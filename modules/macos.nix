@@ -45,7 +45,7 @@ in
       tilesize = 48;
 
       persistent-apps = [
-        "/Applications/Safari.app"
+        "/System/Cryptexes/App/System/Applications/Safari.app"
         "/Applications/Google Chrome.app"
         "/System/Applications/Utilities/Terminal.app"
         "/Applications/Emacs.app"

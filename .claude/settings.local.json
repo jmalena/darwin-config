@@ -4,7 +4,11 @@
       "Bash(git -C /Users/aleph/Desktop/Projekty/darwin-config status)",
       "Read(//Users/aleph/.ssh/**)",
       "Bash(ykman info *)",
-      "Bash(ykman fido *)"
+      "Bash(ykman fido *)",
+      "Bash(git add *)",
+      "Bash(git -c user.name=\"Jonáš Malena\" -c user.email=\"jonas.malena@gmail.com\" commit -m \"feat\\(macos\\): remove docker from dock\")",
+      "Read(//System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/**)",
+      "Read(//System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/Contents/MacOS/**)"
     ]
   }
 }
