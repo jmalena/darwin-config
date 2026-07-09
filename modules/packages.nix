@@ -6,6 +6,7 @@
     curl
     fd
     jq
+    mysides
     ripgrep
     tree
     wget
