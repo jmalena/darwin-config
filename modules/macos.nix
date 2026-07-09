@@ -128,6 +128,12 @@ in
     asuser defaults -currentHost write com.apple.Spotlight orderedItems -array ${spotlightItems} || true
     asuser killall Spotlight || true
 
+    # Finder sidebar: keep exactly one "Projects" favorite; drop the old "Projekty".
+    asuser ${pkgs.mysides}/bin/mysides remove Projekty >/dev/null 2>&1 || true
+    if ! asuser ${pkgs.mysides}/bin/mysides list 2>/dev/null | grep -q 'file:///Users/${config.system.primaryUser}/Projects'; then
+      asuser ${pkgs.mysides}/bin/mysides add Projects "file:///Users/${config.system.primaryUser}/Projects/" || true
+    fi
+
     # Terminal.app: keep Option as a normal modifier on the default profile so it
     # composes special characters (e.g. Czech accents) instead of sending Meta. No
     # declarative option exists — writing the whole "Window Settings" dict via
