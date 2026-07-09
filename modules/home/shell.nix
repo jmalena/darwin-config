@@ -36,11 +36,11 @@
     };
 
     shellAliases = {
-      rebuild = "sudo darwin-rebuild switch --flake ~/Desktop/Projekty/darwin-config#eigen";
+      rebuild = "sudo darwin-rebuild switch --flake ~/Projects/darwin-config#eigen";
     };
 
     dirHashes = {
-      proj = "$HOME/Desktop/Projekty";
+      proj = "$HOME/Projects";
     };
   };
 
