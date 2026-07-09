@@ -8,7 +8,7 @@
   # straight.el writes its packages into ~/.config/emacs/straight/ alongside it.
   xdg.configFile."emacs/init.el".source =
     config.lib.file.mkOutOfStoreSymlink
-      "/Users/aleph/Desktop/Projekty/darwin-config/modules/home/emacs/init.el";
+      "/Users/aleph/Projects/darwin-config/modules/home/emacs/init.el";
 
   # Run Emacs as a login daemon so `emacsclient` (our EDITOR) is instant.
   launchd.agents.emacs = {
