@@ -13,7 +13,10 @@
       "Bash(defaults -currentHost read com.apple.screensaver askForPassword)",
       "Bash(defaults -currentHost read com.apple.screensaver askForPasswordDelay)",
       "Bash(sysadminctl -screenLock immediate)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(nix eval *)",
+      "Bash(nix search *)",
+      "Bash(nix build *)"
     ]
   }
 }
