@@ -26,6 +26,7 @@
       "emacs-app"
       "figma"
       "google-chrome"
+      "mongodb-compass"
       "spotify"
     ];
   };
