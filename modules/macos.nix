@@ -56,7 +56,7 @@ in
       autohide = false;
       mru-spaces = false;
       show-recents = false;
-      tilesize = 48;
+      tilesize = 65;
 
       persistent-apps = [
         "/System/Cryptexes/App/System/Applications/Safari.app"
@@ -66,9 +66,6 @@ in
         "/Applications/ChatGPT.app"
         "/Applications/Figma.app"
         "/Applications/Spotify.app"
-        "/Applications/Proton Mail.app"
-        "/Applications/Proton Pass.app"
-        "/Applications/ProtonVPN.app"
         "/System/Applications/System Settings.app"
       ];
 
