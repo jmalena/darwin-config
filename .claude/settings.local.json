@@ -16,7 +16,10 @@
       "Bash(echo \"exit: $?\")",
       "Bash(nix eval *)",
       "Bash(nix search *)",
-      "Bash(nix build *)"
+      "Bash(nix build *)",
+      "Bash(osascript -e 'tell application \"System Events\" to get the name of every login item')",
+      "Bash(sfltool dumpbtm *)",
+      "Bash(awk '/Records for UID 501/{p=1} p')"
     ]
   }
 }

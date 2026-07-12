@@ -19,6 +19,13 @@ let
   spotlightItems = lib.concatStringsSep " " (
     map (spotlightItem true) spotlightShown ++ map (spotlightItem false) spotlightHidden
   );
+
+  # SMAppService "open at login" helpers to keep disabled. Their Background Task
+  # Management disposition is SIP-protected, but launchd's per-user disable
+  # override is writable and gates whether the job starts at login.
+  disabledLoginItems = [
+    "com.spotify.client.startuphelper"
+  ];
 in
 {
   programs.zsh.enable = true;
@@ -129,6 +136,8 @@ in
 
     asuser defaults -currentHost write com.apple.Spotlight orderedItems -array ${spotlightItems} || true
     asuser killall Spotlight || true
+
+    ${lib.concatMapStringsSep "\n    " (label: ''launchctl disable "gui/$uid/${label}" || true'') disabledLoginItems}
 
     # Finder sidebar: keep exactly one "Projects" favorite; drop the old "Projekty".
     asuser ${pkgs.mysides}/bin/mysides remove Projekty >/dev/null 2>&1 || true
