@@ -63,7 +63,7 @@ in
         "/Applications/Google Chrome.app"
         "/System/Applications/Utilities/Terminal.app"
         "/Applications/Emacs.app"
-        "/Applications/ChatGPT.app"
+        "/Applications/Claude.app"
         "/Applications/Figma.app"
         "/Applications/Spotify.app"
         "/System/Applications/System Settings.app"
