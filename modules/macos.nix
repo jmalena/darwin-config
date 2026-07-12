@@ -6,6 +6,13 @@ let
     ${pkgs.imagemagick}/bin/magick -size 5120x2880 xc:black png:$out/black.png
   '';
 
+  # Google Chrome managed policy: force-install the Proton Pass extension.
+  chromePolicy = (pkgs.formats.plist { }).generate "com.google.Chrome.plist" {
+    ExtensionInstallForcelist = [
+      "ghmbeldphafepmbegfdlkpapadhbakde;https://clients2.google.com/service/update2/crx"
+    ];
+  };
+
   # Spotlight results are limited to these menu categories; the rest are hidden.
   spotlightShown = [ "APPLICATIONS" "SYSTEM_PREFS" ];
   spotlightHidden = [
@@ -62,7 +69,6 @@ in
         "/Applications/Proton Mail.app"
         "/Applications/Proton Pass.app"
         "/Applications/ProtonVPN.app"
-        "/Applications/Proton Authenticator.app"
         "/System/Applications/System Settings.app"
       ];
 
@@ -163,5 +169,15 @@ in
     termPlist="/Users/${config.system.primaryUser}/Library/Preferences/com.apple.Terminal.plist"
     asuser /usr/libexec/PlistBuddy -c "Add :'Window Settings':'$termProfile':useOptionAsMetaKey bool false" "$termPlist" 2>/dev/null \
       || asuser /usr/libexec/PlistBuddy -c "Set :'Window Settings':'$termProfile':useOptionAsMetaKey false" "$termPlist" || true
+
+    # Force-install the Proton Pass extension in Google Chrome. Chrome only honors
+    # ExtensionInstallForcelist as a *mandatory* policy, i.e. a real file under
+    # /Library/Managed Preferences. `defaults write` can't create it there (cfprefsd
+    # treats that domain as read-only), so drop the generated plist in directly and
+    # refresh cfprefsd. Chrome then shows "managed by your organization" and the
+    # extension is non-removable; delete this block and the plist to undo.
+    mkdir -p "/Library/Managed Preferences"
+    install -m 644 ${chromePolicy} "/Library/Managed Preferences/com.google.Chrome.plist"
+    killall cfprefsd 2>/dev/null || true
   '';
 }
