@@ -17,7 +17,7 @@
       cleanup = "zap";
     };
 
-    brews = [ ];
+    brews = [ "mas" ];
 
     casks = [
       "chatgpt"
@@ -27,7 +27,14 @@
       "figma"
       "google-chrome"
       "mongodb-compass"
+      "proton-mail"
+      "proton-pass"
+      "protonvpn"
       "spotify"
     ];
+
+    masApps = {
+      "Proton Authenticator" = 6741758667;
+    };
   };
 }

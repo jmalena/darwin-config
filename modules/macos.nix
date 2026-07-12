@@ -59,6 +59,10 @@ in
         "/Applications/ChatGPT.app"
         "/Applications/Figma.app"
         "/Applications/Spotify.app"
+        "/Applications/Proton Mail.app"
+        "/Applications/Proton Pass.app"
+        "/Applications/ProtonVPN.app"
+        "/Applications/Proton Authenticator.app"
         "/System/Applications/System Settings.app"
       ];
 
@@ -138,6 +142,11 @@ in
     asuser killall Spotlight || true
 
     ${lib.concatMapStringsSep "\n    " (label: ''launchctl disable "gui/$uid/${label}" || true'') disabledLoginItems}
+
+    # Make Proton Mail the default mailto: handler (best-effort; no declarative
+    # option exists). Runs after the Homebrew step so the app is registered.
+    protonMailId=$(asuser /usr/bin/osascript -e 'id of app "Proton Mail"' 2>/dev/null || true)
+    [ -n "$protonMailId" ] && asuser ${pkgs.duti}/bin/duti -s "$protonMailId" mailto || true
 
     # Finder sidebar: keep exactly one "Projects" favorite; drop the old "Projekty".
     asuser ${pkgs.mysides}/bin/mysides remove Projekty >/dev/null 2>&1 || true
