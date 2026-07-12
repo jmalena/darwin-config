@@ -6,6 +6,7 @@
     curl
     fd
     jq
+    libimobiledevice
     mysides
     ripgrep
     tree
