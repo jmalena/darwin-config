@@ -17,7 +17,10 @@
       cleanup = "zap";
     };
 
-    brews = [ "mas" ];
+    brews = [
+      "mas"
+      "python3"
+    ];
 
     casks = [
       "claude"
