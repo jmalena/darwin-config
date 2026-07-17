@@ -44,6 +44,14 @@
   :config
   ;; Hide toolbar
   (tool-bar-mode -1)
+  ;; Keep backups, auto-saves, and lock files out of project directories
+  (let ((cache (expand-file-name "~/.cache/emacs/")))
+    (make-directory (expand-file-name "backups"    cache) t)
+    (make-directory (expand-file-name "auto-saves" cache) t)
+    (make-directory (expand-file-name "lock"       cache) t)
+    (setq backup-directory-alist         `(("." . ,(expand-file-name "backups/" cache)))
+          auto-save-file-name-transforms `((".*" ,(expand-file-name "auto-saves/" cache) t))
+          lock-file-name-transforms      `((".*" ,(expand-file-name "lock/" cache) t))))
   :custom
   ;; Enable fullscreen mode on macOS
   (ns-use-native-fullscreen nil)
