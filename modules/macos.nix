@@ -158,14 +158,20 @@ in
     fi
 
     # Terminal.app: keep Option as a normal modifier on the default profile so it
-    # composes special characters (e.g. Czech accents) instead of sending Meta. No
-    # declarative option exists — writing the whole "Window Settings" dict via
-    # CustomUserPreferences would wipe other profiles.
+    # composes special characters (e.g. Czech accents, and Option+6 -> ^) instead of
+    # sending Meta. No declarative option exists — writing the whole "Window Settings"
+    # dict via CustomUserPreferences would wipe other profiles. We edit the plist and
+    # flush cfprefsd; that covers fresh machines / next login. A Terminal that is
+    # *already running* holds its own in-memory copy and rewrites it on quit, so a
+    # one-time uncheck of "Use Option as Meta key" (Settings > Profiles > Keyboard) is
+    # needed once on an existing install — the GUI is the only way to change a live
+    # Terminal's value.
     termProfile=$(asuser defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || true)
     [ -n "$termProfile" ] || termProfile="Basic"
     termPlist="/Users/${config.system.primaryUser}/Library/Preferences/com.apple.Terminal.plist"
     asuser /usr/libexec/PlistBuddy -c "Add :'Window Settings':'$termProfile':useOptionAsMetaKey bool false" "$termPlist" 2>/dev/null \
       || asuser /usr/libexec/PlistBuddy -c "Set :'Window Settings':'$termProfile':useOptionAsMetaKey false" "$termPlist" || true
+    asuser killall cfprefsd 2>/dev/null || true
 
     # Force-install the Proton Pass extension in Google Chrome. Chrome only honors
     # ExtensionInstallForcelist as a *mandatory* policy, i.e. a real file under
