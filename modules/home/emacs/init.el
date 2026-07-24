@@ -319,6 +319,24 @@
   :config
   (setq typescript-indent-level 2))
 
+;;;; Deno
+
+;; Deno and Node share the same file extensions, so lsp-mode always picks ts-ls
+;; (priority -2) over the built-in deno-ls (-5). When a deno.json/deno.jsonc sits
+;; at the project root, restrict that buffer to deno-ls (which runs `deno lsp');
+;; Node/tsc projects keep ts-ls. Runs at depth -90, before the `lsp' hook, so the
+;; restriction is in place when lsp picks the server.
+(defun my/lsp-prefer-deno-in-deno-projects ()
+  (when (locate-dominating-file
+         default-directory
+         (lambda (dir)
+           (or (file-exists-p (expand-file-name "deno.json" dir))
+               (file-exists-p (expand-file-name "deno.jsonc" dir)))))
+    (setq-local lsp-enabled-clients '(deno-ls))))
+
+(dolist (hook '(typescript-mode-hook js-mode-hook js2-mode-hook))
+  (add-hook hook #'my/lsp-prefer-deno-in-deno-projects -90))
+
 ;;;; Svelte
 
 (use-package svelte-mode
