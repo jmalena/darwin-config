@@ -47,6 +47,7 @@
     # Config-file LSPs
     taplo
     yaml-language-server
+    vscode-langservers-extracted # JSON (vscode-json-language-server) + CSS/HTML
     marksman
 
     # YubiKey

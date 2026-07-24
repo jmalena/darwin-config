@@ -28,7 +28,11 @@
 (use-package exec-path-from-shell
   :ensure t
   :config
-  (when (memq window-system '(mac ns x))
+  ;; launchd starts the Emacs daemon with a bare PATH (/usr/bin:/bin:...), so it
+  ;; can't see Nix-installed LSP servers. `window-system' is nil in a daemon, so
+  ;; the old graphical-only guard skipped this and every server went unfound.
+  ;; Import the login shell's PATH whenever we're a daemon or a GUI frame.
+  (when (or (daemonp) (memq window-system '(mac ns x)))
     (exec-path-from-shell-initialize)))
 
 ;;; Emacs Settings
@@ -107,6 +111,58 @@
   :init
   (global-corfu-mode))
 
+;; corfu's popup is a child frame, which emacs-nox (terminal-only) can't draw, so
+;; completions would be invisible over emacsclient. corfu-terminal is frame-aware
+;; — it renders in the TTY and no-ops in GUI frames — so always enable it.
+(use-package corfu-terminal
+  :after corfu
+  :config
+  (corfu-terminal-mode +1))
+
+;;; LSP
+
+;; Flycheck backs lsp-mode's in-buffer diagnostics. Global so non-LSP buffers
+;; (nix, shell, ...) get linting from whatever checkers are on PATH too.
+(use-package flycheck
+  :init (global-flycheck-mode))
+
+;; which-key ships with Emacs 30, so use the bundled copy (no straight fetch). It
+;; powers the discoverable "C-c l ..." menu that lsp-mode registers below.
+(use-package which-key
+  :straight nil
+  :config (which-key-mode))
+
+(use-package lsp-mode
+  :init
+  ;; ns-command-modifier is 'meta and there is no super key here, so lsp's default
+  ;; "s-l" prefix is unreachable — bind the command menu under Control instead.
+  (setq lsp-keymap-prefix "C-c l")
+  ;; LSP servers stream large JSON payloads over a pipe; raise the read size and
+  ;; GC threshold so they don't stall or thrash.
+  (setq gc-cons-threshold (* 100 1024 1024)
+        read-process-output-max (* 1024 1024))
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . lsp-enable-which-key-integration)
+  :custom
+  ;; Hand completion to completion-at-point (corfu), not company — any other
+  ;; value targets company and completions never reach corfu.
+  (lsp-completion-provider :none)
+  (lsp-diagnostics-provider :flycheck)
+  (lsp-idle-delay 0.5)
+  (lsp-headerline-breadcrumb-enable t))
+
+(use-package lsp-ui
+  :after lsp-mode
+  :commands lsp-ui-mode
+  :custom
+  ;; lsp-ui-doc is child-frame based (a no-op under emacs-nox); rely on eldoc in
+  ;; the echo area for hover, and keep the TTY-friendly sideline.
+  (lsp-ui-doc-enable nil)
+  (lsp-ui-sideline-enable t)
+  (lsp-ui-sideline-show-diagnostics t)
+  (lsp-ui-sideline-show-code-actions t)
+  (lsp-ui-sideline-show-hover nil))
+
 ;;; Language Support
 
 ;;;; Nix
@@ -117,7 +173,8 @@
 ;;;; Dhall
 
 (use-package dhall-mode
-  :mode ("\\.dhall\\'" . dhall-mode))
+  :mode ("\\.dhall\\'" . dhall-mode)
+  :hook (dhall-mode . lsp))
 
 ;;;; Idris
 
@@ -133,18 +190,20 @@
 
 (use-package haskell-mode
   :mode ("\\.hs\\'" . haskell-mode)
-  :hook (haskell-mode . flycheck-mode)
-  :config
-  (setq haskell-stylish-on-save t
-	haskell-indent-spaces 2
-	flycheck-haskell-ghc-checker-executable "hlint"
-	flycheck-check-syntax-automatically '(mode-enabled save new-line)))
+  :custom
+  (haskell-indentation-layout-offset 2)
+  (haskell-indentation-starter-offset 2))
 
 (use-package lsp-haskell
+  ;; `:after haskell-mode' installs the hook as soon as haskell-mode loads; the
+  ;; hooked autoload then pulls in lsp-haskell (registering its client) and
+  ;; lsp-mode. Don't gate on lsp-mode here — with no eager lsp-mode load, that
+  ;; nesting never fires when a .hs buffer is the first LSP file opened.
   :after haskell-mode
-  :hook (haskell-mode . lsp)
-  :config
-  (setq lsp-haskell-server-path "haskell-language-server-wrapper"))
+  :hook (haskell-mode . lsp-deferred)
+  :custom
+  (lsp-haskell-server-path "haskell-language-server-wrapper")
+  (lsp-haskell-formatting-provider "fourmolu"))
 
 ;;;; PureScript
 
@@ -243,8 +302,15 @@
 ;;;; Svelte
 
 (use-package svelte-mode
+  :mode ("\\.svelte\\'" . svelte-mode)
   :hook (svelte-mode . lsp)
-  :mode ("\\.svelte\\'" . svelte-mode))
+  :config
+  ;; lsp-mode's svelte client defaults to an npm-managed server it installs into
+  ;; its own cache. Repoint it at the Nix binary — nixpkgs installs the server as
+  ;; `svelteserver', not `svelte-language-server'. Its bundled typescript-svelte
+  ;; plugin (on by default) is what makes SvelteKit's cross-file $types resolve.
+  (with-eval-after-load 'lsp-svelte
+    (lsp-dependency 'svelte-language-server '(:system "svelteserver"))))
 
 ;;;; Vue
 
