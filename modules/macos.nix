@@ -70,7 +70,7 @@ in
       ];
 
       persistent-others = [
-        { folder = { path = "/Users/aleph/Downloads"; displayas = "folder"; showas = "grid"; }; }
+        { folder = { path = "/Users/aleph/Downloads"; arrangement = "date-modified"; displayas = "folder"; showas = "grid"; }; }
         { folder = { path = "/Applications"; displayas = "folder"; showas = "grid"; }; }
       ];
     };
@@ -128,6 +128,22 @@ in
         DesktopViewSettings.IconViewSettings.arrangeBy = "grid";
         StandardViewSettings.IconViewSettings.arrangeBy = "grid";
         FK_StandardViewSettings.IconViewSettings.arrangeBy = "grid";
+
+        # Finder has no per-folder sort option; this is the template new and
+        # unconfigured list-view folders inherit. Sort by date modified, newest
+        # first, with that column shown.
+        FK_DefaultListViewSettings = {
+          sortColumn = "dateModified";
+          useRelativeDates = true;
+          viewOptionsVersion = 1;
+          columns = [
+            { identifier = "name"; visible = true; ascending = true; width = 300; }
+            { identifier = "dateModified"; visible = true; ascending = false; width = 181; }
+            { identifier = "size"; visible = true; ascending = false; width = 97; }
+            { identifier = "kind"; visible = true; ascending = true; width = 115; }
+            { identifier = "dateAdded"; visible = false; ascending = false; width = 181; }
+          ];
+        };
       };
     };
   };
