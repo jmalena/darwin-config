@@ -78,7 +78,7 @@ in
     finder = {
       AppleShowAllExtensions = true;
       AppleShowAllFiles = true;
-      FXPreferredViewStyle = "icnv";
+      FXPreferredViewStyle = "Nlsv";
       ShowPathbar = true;
       ShowStatusBar = true;
       _FXShowPosixPathInTitle = true;
