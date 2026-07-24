@@ -119,6 +119,26 @@
   :config
   (corfu-terminal-mode +1))
 
+;; Full git UI. magit is TTY-capable, so magit-status works over emacsclient in
+;; the terminal daemon; straight pulls its deps (transient, with-editor, ...).
+;; Commit buffers open back in this same Emacs via with-editor, so no EDITOR
+;; wiring is needed.
+(use-package magit
+  :bind ("C-x g" . magit-status)
+  :custom
+  ;; Refine changed lines to the word, so the diff shows exactly what moved.
+  (magit-diff-refine-hunk t)
+  :custom-face
+  ;; spacemacs-dark doesn't theme magit's added/removed faces, and it flattens
+  ;; its 256-color diff backgrounds to gray — so over emacsclient (emacs-nox)
+  ;; magit's background-based diffs render colorless. Color the +/- lines by
+  ;; foreground instead (the theme's own green/red), the git-diff look that reads
+  ;; reliably in a terminal.
+  (magit-diff-added             ((t (:foreground "#67b11d"))))
+  (magit-diff-added-highlight   ((t (:foreground "#67b11d"))))
+  (magit-diff-removed           ((t (:foreground "#f2241f"))))
+  (magit-diff-removed-highlight ((t (:foreground "#f2241f")))))
+
 ;;; LSP
 
 ;; Flycheck backs lsp-mode's in-buffer diagnostics. Global so non-LSP buffers
