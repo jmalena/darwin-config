@@ -33,6 +33,24 @@
       ignoreDups = true;
       share = true;
       extended = true;
+
+      # Prefix a command with a space to keep it out of the history entirely.
+      ignoreSpace = true;
+
+      # Credential-shaped commands are never written to disk. Single-dash forms
+      # matter too — sysadminctl takes `-password`, not `--password`.
+      ignorePatterns = [
+        "*-password*"
+        "*-token*"
+        "*_TOKEN=*"
+        "*_SECRET=*"
+        "*_KEY=*"
+        "*API_KEY*"
+        "*PASSWORD*"
+        "security *"
+        "sysadminctl *"
+        "*fdesetup*"
+      ];
     };
 
     shellAliases = {

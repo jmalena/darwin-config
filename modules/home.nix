@@ -12,6 +12,7 @@
       ./home/shell.nix
       ./home/emacs.nix
       ./home/lock.nix
+      ./home/security.nix
     ];
 
     home.stateVersion = "25.05";

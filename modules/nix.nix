@@ -17,7 +17,11 @@
     keep-outputs = true;
     keep-derivations = true;
 
-    trusted-users = [ "root" "@admin" ];
+    # A trusted user can push arbitrary paths through the root nix daemon, so
+    # @admin here amounts to passwordless root for any process running as an
+    # admin user. Root builds (sudo darwin-rebuild) are unaffected.
+    trusted-users = [ "root" ];
+    require-sigs = true;
     max-jobs = "auto";
 
     extra-substituters = [

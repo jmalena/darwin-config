@@ -4,6 +4,7 @@
   imports = [
     ../modules/nix.nix
     ../modules/macos.nix
+    ../modules/security.nix
     ../modules/packages.nix
     ../modules/homebrew.nix
     ../modules/home.nix

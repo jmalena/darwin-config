@@ -12,11 +12,13 @@ Guidance for working in this nix-darwin configuration.
 - `flake.nix` — inputs and the `eigen` system output.
 - `hosts/eigen.nix` — host identity + module imports.
 - `modules/nix.nix` — nix settings: gc, optimise, caches, experimental features.
-- `modules/macos.nix` — macOS defaults, fonts, Touch ID, firewall, dock pinning, Spotlight scope, wallpaper.
+- `modules/macos.nix` — macOS defaults, fonts, dock pinning, Spotlight scope, wallpaper, Chrome policy.
+- `modules/security.nix` — Touch ID, firewall, login window, screen lock, AirDrop, Continuity, sharing services.
 - `modules/packages.nix` — system CLI packages.
 - `modules/homebrew.nix` — nix-homebrew and declarative casks.
 - `modules/home.nix` — Home Manager aggregator; imports `modules/home/*`.
 - `modules/home/{dev,git,shell,emacs}.nix` — user env: tooling, git, shell, Emacs.
+- `modules/home/security.nix` — ByHost prefs (screen-saver idle, AirPlay Receiver) that need `-currentHost`.
 - `modules/home/emacs/init.el` — Emacs config, edited here (symlinked to `~/.config/emacs`).
 
 ## Commands

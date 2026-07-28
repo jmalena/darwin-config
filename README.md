@@ -74,7 +74,8 @@ nix build .#darwinConfigurations.eigen.system
 | `install.sh` | Idempotent bootstrap: checks, flakes, YubiKey key-gen, build + activate. |
 | `hosts/eigen.nix` | Host identity: platform, primary user, state version. |
 | `modules/nix.nix` | Nix settings: gc, optimise, binary caches, experimental features. |
-| `modules/macos.nix` | macOS `system.defaults`, fonts, Touch ID, firewall, dock pinning, Spotlight scope, wallpaper. |
+| `modules/macos.nix` | macOS `system.defaults`, fonts, dock pinning, Spotlight scope, wallpaper, Chrome managed policy. |
+| `modules/security.nix` | Touch ID, application firewall, login window, screen lock, AirDrop, Continuity, sharing services. |
 | `modules/packages.nix` | System CLI packages. |
 | `modules/homebrew.nix` | nix-homebrew and declarative casks. |
 | `modules/home.nix` | Home Manager aggregator (imports `home/*`). |
@@ -82,4 +83,5 @@ nix build .#darwinConfigurations.eigen.system
 | `modules/home/git.nix` | Git: delta, difftastic, ignores, aliases, YubiKey signing. |
 | `modules/home/shell.nix` | zsh, starship, fzf, zoxide, direnv, bat, eza. |
 | `modules/home/emacs.nix` | Emacs: terminal/daemon (`emacs-nox`), GUI via Homebrew cask, `init.el` symlink. |
+| `modules/home/security.nix` | ByHost preferences (screen-saver idle time, AirPlay Receiver) unreachable from `CustomUserPreferences`. |
 | `modules/home/emacs/init.el` | Emacs config (vendored from `jmalena/init.el`). |

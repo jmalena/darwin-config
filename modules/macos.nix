@@ -6,11 +6,26 @@ let
     ${pkgs.imagemagick}/bin/magick -size 5120x2880 xc:black png:$out/black.png
   '';
 
-  # Google Chrome managed policy: force-install the Proton Pass extension.
+  # Google Chrome managed policy: force-install Proton Pass, plus hardening.
   chromePolicy = (pkgs.formats.plist { }).generate "com.google.Chrome.plist" {
     ExtensionInstallForcelist = [
       "ghmbeldphafepmbegfdlkpapadhbakde;https://clients2.google.com/service/update2/crx"
     ];
+
+    SafeBrowsingProtectionLevel = 2;
+    BlockThirdPartyCookies = true;
+
+    # Passwords live in Proton Pass; Chrome's own store is unlocked by the login
+    # keychain and is one more place credentials sit at rest.
+    PasswordManagerEnabled = false;
+
+    # Chrome's built-in DoH would resolve through its own provider and bypass the
+    # system resolver. Defer to the OS so queries stay visible to NextDNS.
+    DnsOverHttpsMode = "off";
+
+    # Chrome Remote Desktop must never negotiate through the firewall.
+    RemoteAccessHostFirewallTraversal = false;
+    RemoteAccessHostAllowRemoteAccessConnections = false;
   };
 
   # Spotlight results are limited to these menu categories; the rest are hidden.
@@ -37,19 +52,9 @@ in
 {
   programs.zsh.enable = true;
 
-  security.pam.services.sudo_local.touchIdAuth = true;
-
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
   ];
-
-  networking.applicationFirewall = {
-    enable = true;
-    allowSigned = true;
-    allowSignedApp = true;
-    blockAllIncoming = false;
-    enableStealthMode = true;
-  };
 
   system.defaults = {
     dock = {

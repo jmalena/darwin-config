@@ -44,7 +44,6 @@
       "*.o"
     ];
 
-    maintenance.enable = true;
   };
 
   # delta as the git pager; difftastic wired up as `git difftool`.
