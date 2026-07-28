@@ -79,6 +79,32 @@ in
     };
   };
 
+  # The unified log holds roughly 20 days before rolling over. Archive a day at
+  # a time so evidence survives long enough to investigate something noticed
+  # late — the backup/temp account sessions were only reconstructable because
+  # records happened to still be in range. Refuses to run when the disk is
+  # tight; this must never be the thing that fills it.
+  launchd.daemons.security-log-archive = {
+    script = ''
+      dir=/var/log/security-archive
+
+      free=$(/bin/df -g / | /usr/bin/awk 'NR==2 { print $4 }')
+      if [ "''${free:-0}" -lt 20 ]; then
+        exit 0
+      fi
+
+      /bin/mkdir -p "$dir"
+      /usr/bin/log collect --last 1d --output "$dir/$(/bin/date +%Y-%m-%d).logarchive" || true
+      /usr/bin/find "$dir" -maxdepth 1 -name '*.logarchive' -mtime +90 -exec /bin/rm -rf {} + || true
+    '';
+
+    serviceConfig = {
+      StartCalendarInterval = [ { Hour = 4; Minute = 30; } ];
+      RunAtLoad = false;
+      StandardErrorPath = "/var/log/security-archive.err";
+    };
+  };
+
   system.activationScripts.postActivation.text = lib.mkAfter ''
     fw=/usr/libexec/ApplicationFirewall/socketfilterfw
 
