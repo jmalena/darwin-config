@@ -44,6 +44,9 @@
     idris2
     idris2Packages.idris2Lsp
 
+    # Lean 4 (the compiler is also the LSP server, via `lake serve`)
+    lean4
+
     # Config-file LSPs
     taplo
     yaml-language-server

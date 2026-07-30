@@ -206,6 +206,20 @@
 	 ("\\.ipkg\\'" . idris2-mode))
   :hook (idris2-mode . lsp))
 
+;;;; Lean 4
+
+;; `data' must stay in :files — it holds the abbreviation table for the "Lean"
+;; input method (\alpha -> α), which lean4-mode enables on every buffer it opens.
+;; No :mode needed; the package autoloads .lean to its own Lean 3/4 dispatcher.
+;; lean4-get-rootdir finds `lean' on exec-path and derives `lake' beside it.
+(use-package lean4-mode
+  :straight (lean4-mode
+             :host github
+             :repo "leanprover-community/lean4-mode"
+             :files ("*.el" "data"))
+  :commands lean4-mode
+  :hook (lean4-mode . lsp))
+
 ;;;; Haskell
 
 (use-package haskell-mode

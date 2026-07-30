@@ -20,6 +20,11 @@
     brews = [
       "mas"
       "python3"
+
+      # DNS-over-HTTPS resolver, run as a LaunchDaemon on 127.0.0.1. Wired up
+      # with `sudo nextdns install -config <id>` — a NextDNS config ID is
+      # tied to the user's account/blocklists and isn't declarable here.
+      "nextdns"
     ];
 
     casks = [
