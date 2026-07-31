@@ -53,8 +53,10 @@
     vscode-langservers-extracted # JSON (vscode-json-language-server) + CSS/HTML
     marksman
 
-    # YubiKey
+    # YubiKey (macOS's /usr/bin/ssh ships no FIDO provider, so it silently skips
+    # sk-* keys; this openssh has security-key support built in)
     yubikey-manager
+    openssh
 
     # Nix dev UX
     devenv
