@@ -9,6 +9,11 @@
     # Report the working directory to Apple Terminal so new tabs/windows
     # (Cmd+T / Cmd+N) open in the current folder.
     initContent = ''
+      # pinentry prompts on the controlling terminal, so gpg signing on the
+      # YubiKey fails with "Inappropriate ioctl for device" without this. Per
+      # shell rather than a session variable, since every terminal has its own.
+      export GPG_TTY=$TTY
+
       if [ "$TERM_PROGRAM" = "Apple_Terminal" ]; then
         autoload -Uz add-zsh-hook
         _osc7_cwd() {

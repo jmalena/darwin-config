@@ -220,6 +220,20 @@
   :commands lean4-mode
   :hook (lean4-mode . lsp))
 
+;; Lean's server sends workspace/inlayHint/refresh even though lsp-mode never
+;; advertises refreshSupport for inlay hints. lsp-mode has no branch for that
+;; method (upstream master included), so each request falls through to its
+;; "Unknown request method" warning — and display-warning pops *Warnings* and
+;; redisplays every time, which at Lean's elaboration rate freezes the frame.
+;; The fallback already sends the correct empty response, so only the logging is
+;; wrong: drop this one message and leave every other lsp warning intact.
+(defun my/lsp-mute-inlay-hint-refresh-warning (fn message &rest args)
+  (unless (string-match-p "workspace/inlayHint/refresh"
+                          (apply #'format-message message args))
+    (apply fn message args)))
+
+(advice-add 'lsp-warn :around #'my/lsp-mute-inlay-hint-refresh-warning)
+
 ;;;; Haskell
 
 (use-package haskell-mode
