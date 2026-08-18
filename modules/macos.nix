@@ -75,7 +75,7 @@ in
       ];
 
       persistent-others = [
-        { folder = { path = "/Users/aleph/Downloads"; arrangement = "date-modified"; displayas = "folder"; showas = "grid"; }; }
+        { folder = { path = "/Users/${config.system.primaryUser}/Downloads"; arrangement = "date-modified"; displayas = "folder"; showas = "grid"; }; }
         { folder = { path = "/Applications"; displayas = "folder"; showas = "grid"; }; }
       ];
     };

@@ -2,14 +2,15 @@
 set -euo pipefail
 
 # --- settings -------------------------------------------------------------
-FLAKE_HOST="eigen"
+# One flake output per machine (eigen -> aleph, zweigen -> bet). Default to this
+# machine's name; override with --host or $FLAKE_HOST for a first run on a Mac
+# whose hostname hasn't been set yet.
+FLAKE_HOST="${FLAKE_HOST:-$(scutil --get LocalHostName 2>/dev/null || hostname -s)}"
 GIT_EMAIL="jonas.malena@gmail.com"
 SK_KEY="$HOME/.ssh/id_ed25519_sk"
 NIX_FLAGS=(--extra-experimental-features "nix-command flakes")
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FLAKE="${SCRIPT_DIR}#${FLAKE_HOST}"
-BUILD_ATTR="${SCRIPT_DIR}#darwinConfigurations.${FLAKE_HOST}.system"
 
 # --- helpers --------------------------------------------------------------
 info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
@@ -17,13 +18,25 @@ warn() { printf '\033[1;33mwarning:\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31merror:\033[0m %s\n' "$*" >&2; exit 1; }
 
 DO_UPDATE=0
-for arg in "$@"; do
-  case "$arg" in
+while [ "$#" -gt 0 ]; do
+  case "$1" in
     --update)  DO_UPDATE=1 ;;
-    -h|--help) printf 'Usage: %s [--update]\n  --update  run nix flake update before switching\n' "$0"; exit 0 ;;
-    *)         die "unknown argument: $arg (see --help)" ;;
+    --host)    shift; [ "$#" -gt 0 ] || die "--host needs a value"; FLAKE_HOST="$1" ;;
+    --host=*)  FLAKE_HOST="${1#--host=}" ;;
+    -h|--help)
+      printf 'Usage: %s [--host NAME] [--update]\n  --host    flake output to build (default: this machine'"'"'s hostname)\n  --update  run nix flake update before switching\n' "$0"
+      exit 0 ;;
+    *)         die "unknown argument: $1 (see --help)" ;;
   esac
+  shift
 done
+
+[ -n "$FLAKE_HOST" ] || die "could not determine a host name; pass --host NAME."
+[ -f "${SCRIPT_DIR}/hosts/${FLAKE_HOST}.nix" ] \
+  || die "no host config at hosts/${FLAKE_HOST}.nix — pass --host with one of: $(cd "${SCRIPT_DIR}/hosts" && ls *.nix | grep -v '^common\.nix$' | sed 's/\.nix$//' | tr '\n' ' ')"
+
+FLAKE="${SCRIPT_DIR}#${FLAKE_HOST}"
+BUILD_ATTR="${SCRIPT_DIR}#darwinConfigurations.${FLAKE_HOST}.system"
 
 # --- preconditions --------------------------------------------------------
 [ "$(uname -s)" = "Darwin" ]     || die "this script targets macOS (nix-darwin)."
@@ -76,7 +89,7 @@ if [ "$DO_UPDATE" -eq 1 ]; then
 fi
 
 # --- build first (catches errors before sudo) ----------------------------
-info "Building system closure…"
+info "Building system closure for host '${FLAKE_HOST}'…"
 nix "${NIX_FLAGS[@]}" build --no-link "$BUILD_ATTR"
 
 # --- activate (idempotent) ------------------------------------------------

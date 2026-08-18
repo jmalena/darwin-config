@@ -1,5 +1,5 @@
 {
-  description = "nix-darwin configuration for eigen";
+  description = "nix-darwin configuration for eigen and zweigen";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -17,14 +17,21 @@
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
-  outputs = inputs@{ nix-darwin, home-manager, nix-homebrew, ... }: {
-    darwinConfigurations.eigen = nix-darwin.lib.darwinSystem {
-      specialArgs = { inherit inputs; };
-      modules = [
-        ./hosts/eigen.nix
-        home-manager.darwinModules.home-manager
-        nix-homebrew.darwinModules.nix-homebrew
-      ];
+  outputs = inputs@{ nix-darwin, home-manager, nix-homebrew, ... }:
+    let
+      mkHost = hostModule: nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          hostModule
+          home-manager.darwinModules.home-manager
+          nix-homebrew.darwinModules.nix-homebrew
+        ];
+      };
+    in
+    {
+      darwinConfigurations = {
+        eigen = mkHost ./hosts/eigen.nix;
+        zweigen = mkHost ./hosts/zweigen.nix;
+      };
     };
-  };
 }

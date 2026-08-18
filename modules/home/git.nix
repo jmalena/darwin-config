@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
   programs.git = {
@@ -19,7 +19,7 @@
       # /usr/bin/ssh-keygen has no FIDO provider, so sign with nixpkgs openssh.
       gpg.format = "ssh";
       gpg.ssh.program = "${pkgs.openssh}/bin/ssh-keygen";
-      user.signingKey = "/Users/aleph/.ssh/id_ed25519_sk.pub";
+      user.signingKey = "${config.home.homeDirectory}/.ssh/id_ed25519_sk.pub";
       commit.gpgSign = true;
       tag.gpgSign = true;
 

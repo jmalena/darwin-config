@@ -1,11 +1,11 @@
-{ ... }:
+{ config, ... }:
 
 {
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
   home-manager.backupFileExtension = "backup";
 
-  home-manager.users.aleph = {
+  home-manager.users.${config.system.primaryUser} = {
     imports = [
       ./home/dev.nix
       ./home/git.nix

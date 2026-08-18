@@ -59,7 +59,7 @@
     };
 
     shellAliases = {
-      rebuild = "sudo darwin-rebuild switch --flake ~/Projects/darwin-config#eigen";
+      rebuild = "sudo darwin-rebuild switch --flake ~/Projects/darwin-config";
     };
 
     dirHashes = {

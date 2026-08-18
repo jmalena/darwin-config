@@ -1,6 +1,7 @@
 # darwin-config
 
-Declarative macOS configuration for the host **eigen** (Apple Silicon), built with
+Declarative macOS configuration for two Apple Silicon Macs — **eigen** (primary
+user `aleph`) and **zweigen** (primary user `bet`) — built with
 [nix-darwin](https://github.com/nix-darwin/nix-darwin),
 [Home Manager](https://github.com/nix-community/home-manager), and
 [nix-homebrew](https://github.com/zhaofengli/nix-homebrew).
@@ -23,16 +24,42 @@ Declarative macOS configuration for the host **eigen** (Apple Silicon), built wi
 
 Homebrew itself is **not** a prerequisite — `nix-homebrew` installs and manages it.
 
+## Hosts
+
+Both machines share one module set; a host file carries only identity. Modules
+derive every user-specific path from the primary user, so no username is
+hardcoded outside `hosts/`.
+
+| Host | Primary user | Host file |
+| --- | --- | --- |
+| `eigen` | `aleph` | `hosts/eigen.nix` |
+| `zweigen` | `bet` | `hosts/zweigen.nix` |
+
+Adding a third machine means one more file in `hosts/` and one line in
+`flake.nix`.
+
+The repo is expected to live at `~/Projects/darwin-config` — the `rebuild`
+alias, the Finder sidebar favorite, and the live-editable `init.el` symlink all
+point there.
+
 ## Install
 
-Clone the repo, then run the bootstrap script:
+Clone the repo to `~/Projects/darwin-config`, then run the bootstrap script:
 
 ```sh
 ./install.sh
 ```
 
+It builds the host matching this machine's name. Override that with `--host`
+(useful on a fresh Mac whose hostname isn't set yet):
+
+```sh
+./install.sh --host zweigen
+```
+
 It is idempotent and safe to re-run. Each run:
 
+- resolves the target host and checks that `hosts/<host>.nix` exists;
 - verifies preconditions (macOS, non-root user, Xcode CLT, Nix present);
 - enables flakes for your user in `~/.config/nix/nix.conf`;
 - creates `~/Screenshots` (the `screencapture.location` target);
@@ -43,8 +70,8 @@ It is idempotent and safe to re-run. Each run:
 - builds the system closure, then activates it with `darwin-rebuild switch`
   (bootstrapping nix-darwin on the first run).
 
-Flags: `--update` runs `nix flake update` before switching; `-h` / `--help`
-prints usage.
+Flags: `--host NAME` selects the host output; `--update` runs `nix flake update`
+before switching; `-h` / `--help` prints usage.
 
 > First run only: nix-darwin will not overwrite an existing `/etc/nix/nix.conf`.
 > If you have one, move it aside first:
@@ -57,22 +84,29 @@ prints usage.
 After the first build, `darwin-rebuild` is on your `PATH`:
 
 ```sh
-sudo darwin-rebuild switch --flake .#eigen
+sudo darwin-rebuild switch --flake .
 ```
 
-Build without activating (useful to validate a change):
+With no attribute, `darwin-rebuild` picks the output matching this machine's
+hostname; name it explicitly with `.#eigen` or `.#zweigen`.
+
+Build without activating (useful to validate a change, and the only way to
+check the *other* machine's config from this one):
 
 ```sh
 nix build .#darwinConfigurations.eigen.system
+nix build .#darwinConfigurations.zweigen.system
 ```
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
-| `flake.nix` | Inputs and the `eigen` system output. |
-| `install.sh` | Idempotent bootstrap: checks, flakes, YubiKey key-gen, build + activate. |
-| `hosts/eigen.nix` | Host identity: platform, primary user, state version. |
+| `flake.nix` | Inputs and the `eigen` / `zweigen` system outputs. |
+| `install.sh` | Idempotent bootstrap: host resolution, checks, flakes, YubiKey key-gen, build + activate. |
+| `hosts/common.nix` | Shared module imports, platform, state version. |
+| `hosts/eigen.nix` | Host identity for `eigen`: hostname, primary user `aleph`. |
+| `hosts/zweigen.nix` | Host identity for `zweigen`: hostname, primary user `bet`. |
 | `modules/nix.nix` | Nix settings: gc, optimise, binary caches, experimental features. |
 | `modules/macos.nix` | macOS `system.defaults`, fonts, dock pinning, Spotlight scope, wallpaper, Chrome managed policy. |
 | `modules/security.nix` | Touch ID, application firewall, login window, screen lock, AirDrop, Continuity, sharing services. |

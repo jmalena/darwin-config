@@ -12,14 +12,14 @@
   # straight.el writes its packages into ~/.config/emacs/straight/ alongside it.
   xdg.configFile."emacs/init.el".source =
     config.lib.file.mkOutOfStoreSymlink
-      "/Users/aleph/Projects/darwin-config/modules/home/emacs/init.el";
+      "${config.home.homeDirectory}/Projects/darwin-config/modules/home/emacs/init.el";
 
   # straight.el lockfile: pins all 68 package repos to known commits, so an
   # upstream change can't reach the Emacs daemon that starts at login. Also an
   # out-of-store symlink, so `M-x straight-freeze-versions` writes back here.
   xdg.configFile."emacs/straight/versions/default.el".source =
     config.lib.file.mkOutOfStoreSymlink
-      "/Users/aleph/Projects/darwin-config/modules/home/emacs/straight-versions.el";
+      "${config.home.homeDirectory}/Projects/darwin-config/modules/home/emacs/straight-versions.el";
 
   # Run Emacs as a login daemon so `emacsclient` (our EDITOR) is instant.
   launchd.agents.emacs = {

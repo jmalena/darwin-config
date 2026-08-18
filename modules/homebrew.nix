@@ -1,9 +1,9 @@
-{ ... }:
+{ config, ... }:
 
 {
   nix-homebrew = {
     enable = true;
-    user = "aleph";
+    user = config.system.primaryUser;
     enableRosetta = true;
     autoMigrate = true;
   };
