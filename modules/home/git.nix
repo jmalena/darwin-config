@@ -1,5 +1,14 @@
 { pkgs, config, ... }:
 
+let
+  # ssh-keygen offers the signature to SSH_AUTH_SOCK before it ever reads the key
+  # file, and macOS points that at launchd's agent, which cannot drive ed25519-sk
+  # and refuses outright. Drop the agent so signing goes straight to the YubiKey.
+  signer = pkgs.writeShellScript "git-ssh-keygen" ''
+    exec ${pkgs.coreutils}/bin/env -u SSH_AUTH_SOCK \
+      ${pkgs.openssh}/bin/ssh-keygen "$@"
+  '';
+in
 {
   programs.git = {
     enable = true;
@@ -21,7 +30,7 @@
       # YubiKey 5 NFC — FIDO2 SSH signing (touch-to-sign). macOS's
       # /usr/bin/ssh-keygen has no FIDO provider, so sign with nixpkgs openssh.
       gpg.format = "ssh";
-      gpg.ssh.program = "${pkgs.openssh}/bin/ssh-keygen";
+      gpg.ssh.program = "${signer}";
       user.signingKey = "${config.home.homeDirectory}/.ssh/id_ed25519_sk.pub";
       commit.gpgSign = true;
       tag.gpgSign = true;
