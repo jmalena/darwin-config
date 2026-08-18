@@ -10,6 +10,7 @@
       ./home/dev.nix
       ./home/git.nix
       ./home/shell.nix
+      ./home/ssh.nix
       ./home/emacs.nix
       ./home/lock.nix
       ./home/security.nix

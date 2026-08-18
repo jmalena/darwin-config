@@ -15,6 +15,9 @@
       # the YubiKey FIDO2 key authenticates — /usr/bin/ssh has no FIDO provider.
       core.sshCommand = "${pkgs.openssh}/bin/ssh";
 
+      # Push over SSH so the YubiKey authenticates, even for https:// remotes.
+      url."git@github.com:".insteadOf = "https://github.com/";
+
       # YubiKey 5 NFC — FIDO2 SSH signing (touch-to-sign). macOS's
       # /usr/bin/ssh-keygen has no FIDO provider, so sign with nixpkgs openssh.
       gpg.format = "ssh";
