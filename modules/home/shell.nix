@@ -30,6 +30,49 @@
         add-zsh-hook chpwd _osc7_cwd
         _osc7_cwd
       fi
+
+      # Overwrite a file or folder with zeros, then delete it. rm -P is a no-op
+      # on modern macOS, and on APFS the zeros land in freshly allocated blocks,
+      # so this blanks the contents rather than making the originals
+      # unrecoverable — for that, FileVault plus an ordinary delete.
+      purge() {
+        emulate -L zsh
+        zmodload -F zsh/stat b:zstat
+
+        (( $# )) || { print -u2 'usage: purge <file|folder>...'; return 2 }
+
+        local target
+        for target in "$@"; do
+          [[ -e $target || -L $target ]] || {
+            print -u2 "purge: $target: no such file or directory"
+            return 1
+          }
+        done
+
+        print -n "purge $# item(s) beyond recall? [y/N] "
+        local reply
+        read -r reply || return 1
+        [[ $reply == [yY]* ]] || return 1
+
+        local f
+        local -a files st
+        for target in "$@"; do
+          if [[ -L $target ]]; then
+            files=()
+          elif [[ -d $target ]]; then
+            files=($target/**/*(D.N))
+          else
+            files=($target)
+          fi
+
+          for f in $files; do
+            zstat -A st +size -- $f
+            head -c $st[1] /dev/zero | dd of=$f conv=notrunc status=none
+          done
+
+          rm -rf -- $target
+        done
+      }
     '';
 
     history = {
