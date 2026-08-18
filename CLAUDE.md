@@ -31,6 +31,7 @@ hostname and primary user; every module derives paths from
 - `modules/homebrew.nix` — nix-homebrew and declarative casks.
 - `modules/home.nix` — Home Manager aggregator; imports `modules/home/*`.
 - `modules/home/{dev,git,shell,emacs}.nix` — user env: tooling, git, shell, Emacs.
+- `modules/home/store-sync.nix` — mirrors the STORE drive to STORE_BAK (Cryptomator vault ciphertext).
 - `modules/home/security.nix` — ByHost prefs (screen-saver idle, AirPlay Receiver) that need `-currentHost`.
 - `modules/home/emacs/init.el` — Emacs config, edited here (symlinked to `~/.config/emacs`).
 

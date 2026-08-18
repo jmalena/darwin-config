@@ -13,6 +13,7 @@
       ./home/ssh.nix
       ./home/emacs.nix
       ./home/lock.nix
+      ./home/store-sync.nix
       ./home/security.nix
     ];
 

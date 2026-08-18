@@ -30,8 +30,15 @@
     casks = [
       "claude"
       "claude-code"
+      "cryptomator"
       "emacs-app"
       "figma"
+
+      # Cryptomator's mount driver. FUSE-T runs entirely in userspace, so eigen keeps
+      # its Full Security boot policy — macFUSE would need a Recovery trip to allow
+      # kernel extensions. Upstream's recommendation on Apple Silicon.
+      "fuse-t"
+
       "google-chrome"
       "mongodb-compass"
       "proton-mail"
