@@ -9,21 +9,23 @@ Guidance for working in this nix-darwin configuration.
 
 ## Hosts
 
-Two machines, one shared module set. A host file carries only identity —
-hostname and primary user; every module derives paths from
-`config.system.primaryUser` (system scope) or `config.home.homeDirectory`
-(Home Manager scope), so nothing hardcodes a username.
+One module set, identical for every host. The `hosts` table in `flake.nix` maps
+hostname to primary user and is the only place a username appears; `mkHost`
+turns each entry into a `darwinConfigurations` output. Every module derives
+paths from `config.system.primaryUser` (system scope) or
+`config.home.homeDirectory` (Home Manager scope).
 
 | Host | Primary user |
 | --- | --- |
 | `eigen` | `aleph` |
 | `zweigen` | `bet` |
 
+Adding a host or account is one line in that table — nothing else changes.
+
 ## Layout
 
-- `flake.nix` — inputs and the `eigen` / `zweigen` system outputs.
+- `flake.nix` — inputs, the `hosts` table, and the outputs built from it.
 - `hosts/common.nix` — shared imports, platform, state version.
-- `hosts/{eigen,zweigen}.nix` — host identity: hostname, primary user.
 - `modules/nix.nix` — nix settings: gc, optimise, caches, experimental features.
 - `modules/macos.nix` — macOS defaults, fonts, dock pinning, Spotlight scope, wallpaper, Chrome policy.
 - `modules/security.nix` — Touch ID, firewall, login window, screen lock, AirDrop, Continuity, sharing services.
@@ -45,5 +47,6 @@ hostname and primary user; every module derives paths from
 
 - Prefer declarative nix-darwin / Home Manager options over shell scripts.
 - GUI apps as Homebrew `casks`; CLI tools as Nix packages.
-- Never hardcode a username or `/Users/<name>` path in `modules/` — it belongs
-  in `hosts/`, or derive it from the primary user / home directory.
+- Never hardcode a username or `/Users/<name>` path anywhere but the `hosts`
+  table in `flake.nix` — derive it from `config.system.primaryUser` or
+  `config.home.homeDirectory` instead.

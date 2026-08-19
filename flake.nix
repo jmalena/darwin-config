@@ -1,5 +1,5 @@
 {
-  description = "nix-darwin configuration for eigen and zweigen";
+  description = "nix-darwin configuration, one module set shared by every host";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -19,19 +19,34 @@
 
   outputs = inputs@{ nix-darwin, home-manager, nix-homebrew, ... }:
     let
-      mkHost = hostModule: nix-darwin.lib.darwinSystem {
+      # hostname → primary user. This is the only place either name appears:
+      # every module derives its paths from the primary user or the home
+      # directory, so a new machine or account is one line here and nothing else.
+      hosts = {
+        eigen = "aleph";
+        zweigen = "bet";
+      };
+
+      mkHost = hostName: user: nix-darwin.lib.darwinSystem {
         specialArgs = { inherit inputs; };
         modules = [
-          hostModule
+          ./hosts/common.nix
           home-manager.darwinModules.home-manager
           nix-homebrew.darwinModules.nix-homebrew
+          {
+            networking.hostName = hostName;
+
+            system.primaryUser = user;
+
+            users.users.${user} = {
+              name = user;
+              home = "/Users/${user}";
+            };
+          }
         ];
       };
     in
     {
-      darwinConfigurations = {
-        eigen = mkHost ./hosts/eigen.nix;
-        zweigen = mkHost ./hosts/zweigen.nix;
-      };
+      darwinConfigurations = builtins.mapAttrs mkHost hosts;
     };
 }

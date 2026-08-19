@@ -26,17 +26,25 @@ Homebrew itself is **not** a prerequisite — `nix-homebrew` installs and manage
 
 ## Hosts
 
-Both machines share one module set; a host file carries only identity. Modules
-derive every user-specific path from the primary user, so no username is
-hardcoded outside `hosts/`.
+Every host runs the same module set. The only thing that distinguishes them is
+a hostname-to-user table at the top of `flake.nix`:
 
-| Host | Primary user | Host file |
-| --- | --- | --- |
-| `eigen` | `aleph` | `hosts/eigen.nix` |
-| `zweigen` | `bet` | `hosts/zweigen.nix` |
+```nix
+hosts = {
+  eigen = "aleph";
+  zweigen = "bet";
+};
+```
 
-Adding a third machine means one more file in `hosts/` and one line in
-`flake.nix`.
+| Host | Primary user |
+| --- | --- |
+| `eigen` | `aleph` |
+| `zweigen` | `bet` |
+
+Modules derive every user-specific path from `config.system.primaryUser` or
+`config.home.homeDirectory`, so those two lines are the only place any username
+appears. Adding a machine — or using an entirely different account name — is one
+more entry in that table and nothing else.
 
 The repo is expected to live at `~/Projects/darwin-config` — the `rebuild`
 alias, the Finder sidebar favorite, and the live-editable `init.el` symlink all
@@ -59,7 +67,7 @@ It builds the host matching this machine's name. Override that with `--host`
 
 It is idempotent and safe to re-run. Each run:
 
-- resolves the target host and checks that `hosts/<host>.nix` exists;
+- resolves the target host and checks it against the flake's host table;
 - verifies preconditions (macOS, non-root user, Xcode CLT, Nix present);
 - enables flakes for your user in `~/.config/nix/nix.conf`;
 - creates `~/Screenshots` (the `screencapture.location` target);
@@ -102,11 +110,9 @@ nix build .#darwinConfigurations.zweigen.system
 
 | Path | Purpose |
 | --- | --- |
-| `flake.nix` | Inputs and the `eigen` / `zweigen` system outputs. |
+| `flake.nix` | Inputs, the hostname-to-user table, and the system outputs built from it. |
 | `install.sh` | Idempotent bootstrap: host resolution, checks, flakes, YubiKey key-gen, build + activate. |
 | `hosts/common.nix` | Shared module imports, platform, state version. |
-| `hosts/eigen.nix` | Host identity for `eigen`: hostname, primary user `aleph`. |
-| `hosts/zweigen.nix` | Host identity for `zweigen`: hostname, primary user `bet`. |
 | `modules/nix.nix` | Nix settings: gc, optimise, binary caches, experimental features. |
 | `modules/macos.nix` | macOS `system.defaults`, fonts, dock pinning, Spotlight scope, wallpaper, Chrome managed policy. |
 | `modules/security.nix` | Touch ID, application firewall, login window, screen lock, AirDrop, Continuity, sharing services. |

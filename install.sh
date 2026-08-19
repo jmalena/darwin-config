@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # --- settings -------------------------------------------------------------
-# One flake output per machine (eigen -> aleph, zweigen -> bet). Default to this
-# machine's name; override with --host or $FLAKE_HOST for a first run on a Mac
-# whose hostname hasn't been set yet.
+# One flake output per machine, named in the hosts table in flake.nix. Default
+# to this machine's name; override with --host or $FLAKE_HOST for a first run on
+# a Mac whose hostname hasn't been set yet.
 FLAKE_HOST="${FLAKE_HOST:-$(scutil --get LocalHostName 2>/dev/null || hostname -s)}"
 GIT_EMAIL="jonas.malena@gmail.com"
 SK_KEY="$HOME/.ssh/id_ed25519_sk"
@@ -32,8 +32,15 @@ while [ "$#" -gt 0 ]; do
 done
 
 [ -n "$FLAKE_HOST" ] || die "could not determine a host name; pass --host NAME."
-[ -f "${SCRIPT_DIR}/hosts/${FLAKE_HOST}.nix" ] \
-  || die "no host config at hosts/${FLAKE_HOST}.nix — pass --host with one of: $(cd "${SCRIPT_DIR}/hosts" && ls *.nix | grep -v '^common\.nix$' | sed 's/\.nix$//' | tr '\n' ' ')"
+
+# Hosts are entries in the flake's table, not files, so ask the flake. attrNames
+# does not force the configurations, so this stays cheap.
+KNOWN_HOSTS="$(nix eval --raw "${SCRIPT_DIR}#darwinConfigurations" \
+  --apply 'c: builtins.concatStringsSep " " (builtins.attrNames c)' 2>/dev/null)"
+case " ${KNOWN_HOSTS} " in
+  *" ${FLAKE_HOST} "*) ;;
+  *) die "no host '${FLAKE_HOST}' in the flake — pass --host with one of: ${KNOWN_HOSTS}" ;;
+esac
 
 FLAKE="${SCRIPT_DIR}#${FLAKE_HOST}"
 BUILD_ATTR="${SCRIPT_DIR}#darwinConfigurations.${FLAKE_HOST}.system"
