@@ -28,7 +28,7 @@ Adding a host or account is one line in that table — nothing else changes.
 - `hosts/common.nix` — shared imports, platform, state version.
 - `modules/nix.nix` — nix settings: gc, optimise, caches, experimental features.
 - `modules/macos.nix` — macOS defaults, fonts, dock pinning, Spotlight scope, wallpaper, Chrome policy.
-- `modules/security.nix` — Touch ID, firewall, login window, screen lock, AirDrop, Continuity, sharing services.
+- `modules/security.nix` — Touch ID, firewall, login window, screen lock, clamshell logout, AirDrop, Continuity, sharing services.
 - `modules/packages.nix` — system CLI packages.
 - `modules/homebrew.nix` — nix-homebrew and declarative casks.
 - `modules/home.nix` — Home Manager aggregator; imports `modules/home/*`.

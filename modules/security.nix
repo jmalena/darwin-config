@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, pkgs, ... }:
 
 let
   # Application firewall entries to revoke. Interpreters accept inbound for any
@@ -102,6 +102,57 @@ in
       StartCalendarInterval = [ { Hour = 4; Minute = 30; } ];
       RunAtLoad = false;
       StandardErrorPath = "/var/log/security-archive.err";
+    };
+  };
+
+  # Closing the lid with an external display attached leaves the machine awake
+  # in clamshell mode: the session stays unlocked behind a screen nobody is
+  # looking at. End it the moment that happens. A lid close with nothing else
+  # attached only sleeps, which the immediate screen lock already covers.
+  launchd.daemons.clamshell-logout = {
+    script = ''
+      lidClosed() {
+        /usr/sbin/ioreg -r -k AppleClamshellState -d 1 \
+          | /usr/bin/grep -q '"AppleClamshellState" = Yes'
+      }
+
+      # The built-in panel is the only display that reports a connection type,
+      # so anything else the window server lists is external.
+      externalDisplay() {
+        count=$(/usr/sbin/system_profiler -json SPDisplaysDataType 2>/dev/null |
+          ${pkgs.jq}/bin/jq '[.SPDisplaysDataType[]?.spdisplays_ndrvs[]?
+            | select(.spdisplays_connection_type != "spdisplays_internal")]
+            | length' 2>/dev/null)
+        [ "''${count:-0}" -gt 0 ]
+      }
+
+      while :; do
+        interval=1
+
+        if lidClosed; then
+          if externalDisplay; then
+            uid=$(/usr/bin/stat -f %u /dev/console)
+            # Below 501 is the login window itself: no session left to end.
+            if [ "''${uid:-0}" -ge 501 ]; then
+              # bootout rather than an AppleScript logout: no confirmation
+              # dialog, and no app can veto it by holding unsaved changes.
+              /bin/launchctl bootout "gui/$uid"
+            fi
+          else
+            # On its way to sleep. Back off instead of asking the display list
+            # once a second, while still catching a display attached later.
+            interval=10
+          fi
+        fi
+
+        /bin/sleep "$interval"
+      done
+    '';
+
+    serviceConfig = {
+      RunAtLoad = true;
+      KeepAlive = true;
+      StandardErrorPath = "/var/log/clamshell-logout.err";
     };
   };
 
