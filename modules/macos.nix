@@ -71,7 +71,6 @@ in
         "/Applications/Claude.app"
         "/Applications/Figma.app"
         "/Applications/Spotify.app"
-        "/Applications/Cryptomator.app"
         "/System/Applications/System Settings.app"
       ];
 
