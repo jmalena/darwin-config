@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   # Application firewall entries to revoke. Interpreters accept inbound for any
@@ -15,6 +15,8 @@ let
 
   # Sharing daemons held off at the launchd level, independent of the Sharing
   # pane. AppleFileServer and AEServer no longer ship on macOS 26.
+  byHost = "/Users/${config.system.primaryUser}/Library/Preferences/ByHost";
+
   sharingDaemons = [
     "com.apple.screensharing"
     "com.apple.smbd"
@@ -102,6 +104,33 @@ in
       StartCalendarInterval = [ { Hour = 4; Minute = 30; } ];
       RunAtLoad = false;
       StandardErrorPath = "/var/log/security-archive.err";
+    };
+  };
+
+  # The login window runs as root and places itself on whichever display root's
+  # saved arrangement calls main. Root has no such arrangement, so it falls back
+  # to the built-in panel and the external screen stays dark. Mirror the primary
+  # user's arrangement into root's ByHost domain whenever it changes, and the
+  # login window lands on the same main display the session uses. macOS draws it
+  # on one screen only; there is no setting that puts it on both.
+  launchd.daemons.loginwindow-display-sync = {
+    script = ''
+      domain=com.apple.windowserver.displays
+      uuid=$(/usr/sbin/ioreg -rd1 -c IOPlatformExpertDevice \
+        | /usr/bin/awk -F'"' '/IOPlatformUUID/ { print $4 }')
+      src=${byHost}/$domain.$uuid.plist
+
+      [ -f "$src" ] || exit 0
+
+      # import rather than a copy: it goes through cfprefsd, so root's cached
+      # copy of the domain cannot overwrite the file afterwards.
+      /usr/bin/defaults -currentHost import "$domain" "$src"
+    '';
+
+    serviceConfig = {
+      RunAtLoad = true;
+      WatchPaths = [ byHost ];
+      StandardErrorPath = "/var/log/loginwindow-display-sync.err";
     };
   };
 
