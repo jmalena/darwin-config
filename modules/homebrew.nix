@@ -40,6 +40,7 @@
       "fuse-t"
 
       "google-chrome"
+      "kicad"
       "mongodb-compass"
       "proton-mail"
       "proton-pass"
