@@ -200,8 +200,12 @@ in
     # treats that domain as read-only), so drop the generated plist in directly and
     # refresh cfprefsd. Chrome then shows "managed by your organization" and the
     # extension is non-removable; delete this block and the plist to undo.
-    mkdir -p "/Library/Managed Preferences"
-    install -m 644 ${chromePolicy} "/Library/Managed Preferences/com.google.Chrome.plist"
+    # The per-user subdirectory keeps the policy on the primary user: the plain
+    # /Library/Managed Preferences path is computer-level and would force these
+    # settings on every account on this Mac, including ones this config never owns.
+    mkdir -p "/Library/Managed Preferences/${config.system.primaryUser}"
+    install -m 644 ${chromePolicy} "/Library/Managed Preferences/${config.system.primaryUser}/com.google.Chrome.plist"
+    rm -f "/Library/Managed Preferences/com.google.Chrome.plist"
     killall cfprefsd 2>/dev/null || true
   '';
 }
