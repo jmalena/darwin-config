@@ -266,7 +266,11 @@
 
 ;;;; Python
 
-(use-package python-mode
+;; The built-in python.el, not the external python-mode.el package — that one
+;; is ~30k lines, slow to load and native-compile, and lsp-mode targets the
+;; built-in mode anyway.
+(use-package python
+  :straight nil
   :mode ("\\.py\\'" . python-mode)
   :hook (python-mode . lsp))
 
