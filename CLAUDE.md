@@ -29,6 +29,7 @@ Adding a host or account is one line in that table — nothing else changes.
 - `modules/nix.nix` — nix settings: gc, optimise, caches, experimental features.
 - `modules/macos.nix` — macOS defaults, fonts, dock pinning, Spotlight scope, wallpaper, Chrome policy.
 - `modules/security.nix` — Touch ID, firewall, login window, screen lock, clamshell logout, AirDrop, Continuity, sharing services.
+- `modules/vpn.nix` — always-on WireGuard tunnel to Proton (yields to the app's own tunnel), pf kill switch, DNS pinning on network change.
 - `modules/packages.nix` — system CLI packages.
 - `modules/homebrew.nix` — nix-homebrew and declarative casks.
 - `modules/home.nix` — Home Manager aggregator; imports `modules/home/*`.

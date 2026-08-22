@@ -106,6 +106,35 @@ nix build .#darwinConfigurations.eigen.system
 nix build .#darwinConfigurations.zweigen.system
 ```
 
+## VPN
+
+`modules/vpn.nix` keeps a WireGuard tunnel to Proton up and blocks every egress
+path that does not go through it. The profile carries a private key, so it is
+not declared in this repo — download one from **account.protonvpn.com >
+Downloads > WireGuard configuration** and drop it in place:
+
+```sh
+sudo install -m 600 ~/Downloads/proton.conf /etc/wireguard/proton.conf
+```
+
+Until that file exists the kill switch stays open, so a fresh machine is never
+left without a network.
+
+The tunnel starts at boot and covers the machine before anyone logs in. The
+Proton app coexists with it: the moment the app's own tunnel connects, the
+daemon takes the baseline tunnel down and stands its pf rules aside, then
+brings both back as soon as the app disconnects. While the app holds the
+tunnel, leak protection is its job — keep the kill switch enabled in its
+settings.
+
+On a captive portal (hotel, airport, train) the kill switch blocks the sign-in
+page. Open a window for it:
+
+```sh
+sudo vpn-bypass       # kill switch off for 15 minutes
+sudo vpn-bypass off   # back on as soon as you are through
+```
+
 ## Layout
 
 | Path | Purpose |
@@ -116,6 +145,7 @@ nix build .#darwinConfigurations.zweigen.system
 | `modules/nix.nix` | Nix settings: gc, optimise, binary caches, experimental features. |
 | `modules/macos.nix` | macOS `system.defaults`, fonts, dock pinning, Spotlight scope, wallpaper, Chrome managed policy. |
 | `modules/security.nix` | Touch ID, application firewall, login window, screen lock, AirDrop, Continuity, sharing services. |
+| `modules/vpn.nix` | Always-on WireGuard tunnel to Proton, pf kill switch, DNS pinning on network change. |
 | `modules/packages.nix` | System CLI packages. |
 | `modules/homebrew.nix` | nix-homebrew and declarative casks. |
 | `modules/home.nix` | Home Manager aggregator (imports `home/*`). |
