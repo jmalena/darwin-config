@@ -57,8 +57,6 @@
           auto-save-file-name-transforms `((".*" ,(expand-file-name "auto-saves/" cache) t))
           lock-file-name-transforms      `((".*" ,(expand-file-name "lock/" cache) t))))
   :custom
-  ;; Enable fullscreen mode on macOS
-  (ns-use-native-fullscreen nil)
   ;; Use Command as Meta instead of Option on macOS
   (ns-command-modifier 'meta)
   (ns-option-modifier 'none))
