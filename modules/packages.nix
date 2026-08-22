@@ -14,6 +14,7 @@
     jq
     libimobiledevice
     mysides
+    pandoc
     ripgrep
     tree
     wget
