@@ -15,6 +15,12 @@
     libimobiledevice
     mysides
     pandoc
+
+    # HTML to PDF without a TeX install; pandoc's default pdflatex engine would
+    # pull in all of MacTeX. `pandoc --pdf-engine=weasyprint` renders through
+    # pandoc's own template, so call weasyprint directly to keep the source CSS.
+    python3Packages.weasyprint
+
     ripgrep
     tree
     wget
