@@ -31,6 +31,12 @@
       "claude"
       "claude-code"
       "cryptomator"
+
+      # The `docker` formula is the CLI only and has no engine to talk to on
+      # macOS; Desktop ships both, and symlinks docker/docker-compose into
+      # /usr/local/bin.
+      "docker-desktop"
+
       "emacs-app"
       "figma"
 
