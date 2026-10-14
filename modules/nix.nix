@@ -1,5 +1,3 @@
-{ ... }:
-
 {
   nixpkgs.config.allowUnfree = true;
 
@@ -13,16 +11,12 @@
 
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-
     keep-outputs = true;
     keep-derivations = true;
-
-    # A trusted user can push arbitrary paths through the root nix daemon, so
-    # @admin here amounts to passwordless root for any process running as an
-    # admin user. Root builds (sudo darwin-rebuild) are unaffected.
-    trusted-users = [ "root" ];
-    require-sigs = true;
     max-jobs = "auto";
+
+    # Deliberately not @admin: a trusted user is effectively passwordless root.
+    trusted-users = [ "root" ];
 
     extra-substituters = [
       "https://nix-community.cachix.org"

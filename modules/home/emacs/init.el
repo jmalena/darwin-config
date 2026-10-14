@@ -14,24 +14,19 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
-;; Install use-package
+;; Install use-package and have it use straight.el by default
 (straight-use-package 'use-package)
 
-;; Configure use-package to use straight.el by default
 (use-package straight
   :custom
   (straight-use-package-by-default t))
 
-;;; System Stuff
+;;; Environment
 
-;; Load ~/.zshrc env variables on MacOS
+;; launchd starts the daemon with a bare PATH; import the login shell's so
+;; Nix-installed tools such as LSP servers are found.
 (use-package exec-path-from-shell
-  :ensure t
   :config
-  ;; launchd starts the Emacs daemon with a bare PATH (/usr/bin:/bin:...), so it
-  ;; can't see Nix-installed LSP servers. `window-system' is nil in a daemon, so
-  ;; the old graphical-only guard skipped this and every server went unfound.
-  ;; Import the login shell's PATH whenever we're a daemon or a GUI frame.
   (when (or (daemonp) (memq window-system '(mac ns x)))
     (exec-path-from-shell-initialize)))
 
@@ -39,25 +34,20 @@
 
 (use-package emacs
   :init
-  ;; Open empty file on startup
-  (setq initial-scratch-message "")
-  (setq inhibit-startup-message t)
-  :bind
-  ;; Bind redo to M-_
-  ("M-_" . 'undo-redo)
+  (setq initial-scratch-message ""
+        inhibit-startup-message t)
+  :bind ("M-_" . undo-redo)
   :config
-  ;; Hide toolbar
   (tool-bar-mode -1)
-  ;; Keep backups, auto-saves, and lock files out of project directories
+  ;; Keep backups, auto-saves and lock files out of project directories.
   (let ((cache (expand-file-name "~/.cache/emacs/")))
-    (make-directory (expand-file-name "backups"    cache) t)
-    (make-directory (expand-file-name "auto-saves" cache) t)
-    (make-directory (expand-file-name "lock"       cache) t)
+    (dolist (dir '("backups" "auto-saves" "lock"))
+      (make-directory (expand-file-name dir cache) t))
     (setq backup-directory-alist         `(("." . ,(expand-file-name "backups/" cache)))
           auto-save-file-name-transforms `((".*" ,(expand-file-name "auto-saves/" cache) t))
           lock-file-name-transforms      `((".*" ,(expand-file-name "lock/" cache) t))))
   :custom
-  ;; Use Command as Meta instead of Option on macOS
+  ;; Command is Meta; Option is left for typing special characters.
   (ns-command-modifier 'meta)
   (ns-option-modifier 'none))
 
@@ -90,48 +80,32 @@
 
 (use-package ag
   :bind (("C-c s" . ag-project)
-         ;; Command+Shift+% (Meta-%) runs a project-wide search
+         ;; Replaces query-replace with a project-wide search.
          ("M-%" . ag-project))
   :config
   (setq ag-highlight-search t))
 
 (use-package smartparens
-  :ensure smartparens
-  :hook (prog-mode rust-mode js2-mode json-mode typescript-mode vue-mode graphql-mode)
+  :hook (prog-mode vue-mode)
   :config
   (require 'smartparens-config))
 
 (use-package corfu
-  :hook
-  ((prog-mode . corfu-mode)
-   (shell-mode . corfu-mode)
-   (eshell-mode . corfu-mode))
   :init
   (global-corfu-mode))
 
-;; corfu's popup is a child frame, which emacs-nox (terminal-only) can't draw, so
-;; completions would be invisible over emacsclient. corfu-terminal is frame-aware
-;; — it renders in the TTY and no-ops in GUI frames — so always enable it.
+;; corfu's popup is a child frame, which a terminal can't draw.
 (use-package corfu-terminal
   :after corfu
   :config
   (corfu-terminal-mode +1))
 
-;; Full git UI. magit is TTY-capable, so magit-status works over emacsclient in
-;; the terminal daemon; straight pulls its deps (transient, with-editor, ...).
-;; Commit buffers open back in this same Emacs via with-editor, so no EDITOR
-;; wiring is needed.
 (use-package magit
   :bind ("C-x g" . magit-status)
   :custom
-  ;; Refine changed lines to the word, so the diff shows exactly what moved.
   (magit-diff-refine-hunk t)
   :custom-face
-  ;; spacemacs-dark doesn't theme magit's added/removed faces, and it flattens
-  ;; its 256-color diff backgrounds to gray — so over emacsclient (emacs-nox)
-  ;; magit's background-based diffs render colorless. Color the +/- lines by
-  ;; foreground instead (the theme's own green/red), the git-diff look that reads
-  ;; reliably in a terminal.
+  ;; spacemacs-dark leaves these colorless in a terminal; color the text instead.
   (magit-diff-added             ((t (:foreground "#67b11d"))))
   (magit-diff-added-highlight   ((t (:foreground "#67b11d"))))
   (magit-diff-removed           ((t (:foreground "#f2241f"))))
@@ -139,32 +113,26 @@
 
 ;;; LSP
 
-;; Flycheck backs lsp-mode's in-buffer diagnostics. Global so non-LSP buffers
-;; (nix, shell, ...) get linting from whatever checkers are on PATH too.
+;; Global, so non-LSP buffers get whatever checkers are on PATH.
 (use-package flycheck
   :init (global-flycheck-mode))
 
-;; which-key ships with Emacs 30, so use the bundled copy (no straight fetch). It
-;; powers the discoverable "C-c l ..." menu that lsp-mode registers below.
+;; Bundled with Emacs 30; powers lsp-mode's "C-c l" menu.
 (use-package which-key
   :straight nil
   :config (which-key-mode))
 
 (use-package lsp-mode
   :init
-  ;; ns-command-modifier is 'meta and there is no super key here, so lsp's default
-  ;; "s-l" prefix is unreachable — bind the command menu under Control instead.
+  ;; The default "s-l" prefix is unreachable with Command as Meta.
   (setq lsp-keymap-prefix "C-c l")
-  ;; LSP servers stream large JSON payloads over a pipe; raise the read size and
-  ;; GC threshold so they don't stall or thrash.
+  ;; LSP servers send large JSON payloads.
   (setq gc-cons-threshold (* 100 1024 1024)
         read-process-output-max (* 1024 1024))
   :commands (lsp lsp-deferred)
   :hook (lsp-mode . lsp-enable-which-key-integration)
   :custom
-  ;; Hand completion to completion-at-point (corfu), not company — any other
-  ;; value targets company and completions never reach corfu.
-  (lsp-completion-provider :none)
+  (lsp-completion-provider :none) ; complete via completion-at-point (corfu)
   (lsp-diagnostics-provider :flycheck)
   (lsp-idle-delay 0.5)
   (lsp-headerline-breadcrumb-enable t))
@@ -173,8 +141,7 @@
   :after lsp-mode
   :commands lsp-ui-mode
   :custom
-  ;; lsp-ui-doc is child-frame based (a no-op under emacs-nox); rely on eldoc in
-  ;; the echo area for hover, and keep the TTY-friendly sideline.
+  ;; The doc popup needs child frames; rely on eldoc and the sideline.
   (lsp-ui-doc-enable nil)
   (lsp-ui-sideline-enable t)
   (lsp-ui-sideline-show-diagnostics t)
@@ -201,15 +168,13 @@
              :host github
              :repo "idris-community/idris2-mode")
   :mode (("\\.idr\\'" . idris2-mode)
-	 ("\\.ipkg\\'" . idris2-mode))
+         ("\\.ipkg\\'" . idris2-mode))
   :hook (idris2-mode . lsp))
 
 ;;;; Lean 4
 
-;; `data' must stay in :files — it holds the abbreviation table for the "Lean"
-;; input method (\alpha -> α), which lean4-mode enables on every buffer it opens.
-;; No :mode needed; the package autoloads .lean to its own Lean 3/4 dispatcher.
-;; lean4-get-rootdir finds `lean' on exec-path and derives `lake' beside it.
+;; `data' holds the Lean input method's abbreviations (\alpha -> α).
+;; No :mode needed; the package registers .lean itself.
 (use-package lean4-mode
   :straight (lean4-mode
              :host github
@@ -218,13 +183,8 @@
   :commands lean4-mode
   :hook (lean4-mode . lsp))
 
-;; Lean's server sends workspace/inlayHint/refresh even though lsp-mode never
-;; advertises refreshSupport for inlay hints. lsp-mode has no branch for that
-;; method (upstream master included), so each request falls through to its
-;; "Unknown request method" warning — and display-warning pops *Warnings* and
-;; redisplays every time, which at Lean's elaboration rate freezes the frame.
-;; The fallback already sends the correct empty response, so only the logging is
-;; wrong: drop this one message and leave every other lsp warning intact.
+;; Lean's server sends workspace/inlayHint/refresh, which lsp-mode answers
+;; correctly but warns about every time, freezing the frame. Mute that warning.
 (defun my/lsp-mute-inlay-hint-refresh-warning (fn message &rest args)
   (unless (string-match-p "workspace/inlayHint/refresh"
                           (apply #'format-message message args))
@@ -240,11 +200,9 @@
   (haskell-indentation-layout-offset 2)
   (haskell-indentation-starter-offset 2))
 
+;; Loaded after haskell-mode, not lsp-mode, so it also works when a .hs file
+;; is the first LSP buffer opened.
 (use-package lsp-haskell
-  ;; `:after haskell-mode' installs the hook as soon as haskell-mode loads; the
-  ;; hooked autoload then pulls in lsp-haskell (registering its client) and
-  ;; lsp-mode. Don't gate on lsp-mode here — with no eager lsp-mode load, that
-  ;; nesting never fires when a .hs buffer is the first LSP file opened.
   :after haskell-mode
   :hook (haskell-mode . lsp-deferred)
   :custom
@@ -266,33 +224,25 @@
 
 ;;;; Python
 
-;; The built-in python.el, not the external python-mode.el package — that one
-;; is ~30k lines, slow to load and native-compile, and lsp-mode targets the
-;; built-in mode anyway.
+;; Built-in python.el, not the much heavier python-mode.el package.
 (use-package python
   :straight nil
   :mode ("\\.py\\'" . python-mode)
   :hook (python-mode . lsp))
 
-;;;; C++
+;;;; C / C++
 
 (use-package cc-mode
-  :ensure nil
-  :hook ((c++-mode . lsp)
-         (c-mode . lsp))
-  :config
-  (setq c-basic-offset 4
-        tab-width 4
-        indent-tabs-mode nil
-        c-default-style "bsd")
-  ;; Use 'clangd' for LSP
-  (with-eval-after-load 'lsp-mode
-    (setq lsp-clients-clangd-executable "clangd")))
+  :straight nil
+  :hook (((c-mode c++-mode) . lsp)
+         (c-mode-common . (lambda () (setq indent-tabs-mode nil tab-width 4))))
+  :custom
+  (c-default-style "bsd")
+  (c-basic-offset 4))
 
 ;;;; CMake
 
 (use-package cmake-mode
-  :ensure t
   :mode ("CMakeLists\\.txt\\'" "\\.cmake\\'")
   :hook (cmake-mode . lsp))
 
@@ -324,8 +274,8 @@
 ;;;; JavaScript
 
 (use-package js2-mode
-  :mode ("\\.js\\'" . js-mode)
-  :mode ("\\.mjs\\'" . js2-mode)
+  :mode (("\\.js\\'" . js2-mode)
+         ("\\.mjs\\'" . js2-mode))
   :hook (js2-mode . lsp)
   :config
   (setq js2-basic-offset 2))
@@ -351,11 +301,8 @@
 
 ;;;; Deno
 
-;; Deno and Node share the same file extensions, so lsp-mode always picks ts-ls
-;; (priority -2) over the built-in deno-ls (-5). When a deno.json/deno.jsonc sits
-;; at the project root, restrict that buffer to deno-ls (which runs `deno lsp');
-;; Node/tsc projects keep ts-ls. Runs at depth -90, before the `lsp' hook, so the
-;; restriction is in place when lsp picks the server.
+;; lsp-mode always prefers ts-ls over deno-ls, so restrict buffers in a project
+;; with deno.json(c) to deno-ls. Depth -90 runs this before the `lsp' hook.
 (defun my/lsp-prefer-deno-in-deno-projects ()
   (when (locate-dominating-file
          default-directory
@@ -373,10 +320,7 @@
   :mode ("\\.svelte\\'" . svelte-mode)
   :hook (svelte-mode . lsp)
   :config
-  ;; lsp-mode's svelte client defaults to an npm-managed server it installs into
-  ;; its own cache. Repoint it at the Nix binary — nixpkgs installs the server as
-  ;; `svelteserver', not `svelte-language-server'. Its bundled typescript-svelte
-  ;; plugin (on by default) is what makes SvelteKit's cross-file $types resolve.
+  ;; Use the Nix-installed server, which nixpkgs names `svelteserver'.
   (with-eval-after-load 'lsp-svelte
     (lsp-dependency 'svelte-language-server '(:system "svelteserver"))))
 
@@ -411,13 +355,10 @@
 ;;;; Protobuf
 
 (use-package protobuf-mode
-  ; :hook (protobuf-mode . lsp)
   :mode ("\\.proto\\'" . protobuf-mode)
-  :config
-  (setq c-basic-offset 2))
+  :hook (protobuf-mode . (lambda () (setq c-basic-offset 2))))
 
 ;;;; Dotenv
 
 (use-package dotenv-mode
-  :ensure t
   :mode "\\.env\\(?:\\..*\\)?\\'")

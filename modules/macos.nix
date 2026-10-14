@@ -1,60 +1,15 @@
 { pkgs, config, lib, ... }:
 
 let
-  blackWallpaper = pkgs.runCommand "black-wallpaper" { } ''
-    mkdir -p $out
-    ${pkgs.imagemagick}/bin/magick -size 5120x2880 xc:black png:$out/black.png
-  '';
-
-  # Google Chrome managed policy: force-install Proton Pass, plus hardening.
-  chromePolicy = (pkgs.formats.plist { }).generate "com.google.Chrome.plist" {
-    ExtensionInstallForcelist = [
-      "ghmbeldphafepmbegfdlkpapadhbakde;https://clients2.google.com/service/update2/crx"
-    ];
-
-    SafeBrowsingProtectionLevel = 2;
-    BlockThirdPartyCookies = true;
-
-    # Passwords live in Proton Pass; Chrome's own store is unlocked by the login
-    # keychain and is one more place credentials sit at rest.
-    PasswordManagerEnabled = false;
-
-    # Chrome's built-in DoH would resolve through its own provider and bypass the
-    # system resolver. Defer to the OS so queries stay visible to NextDNS.
-    DnsOverHttpsMode = "off";
-
-    # Chrome Remote Desktop must never negotiate through the firewall.
-    RemoteAccessHostFirewallTraversal = false;
-    RemoteAccessHostAllowRemoteAccessConnections = false;
-  };
-
-  # Spotlight results are limited to these menu categories; the rest are hidden.
-  spotlightShown = [ "APPLICATIONS" "SYSTEM_PREFS" ];
-  spotlightHidden = [
-    "MENU_EXPRESSION" "CONTACT" "MENU_CONVERSION" "MENU_DEFINITION"
-    "DOCUMENTS" "EVENT_TODO" "DIRECTORIES" "FONTS" "IMAGES" "MESSAGES"
-    "MOVIES" "MUSIC" "MENU_OTHER" "PDF" "PRESENTATIONS"
-    "MENU_SPOTLIGHT_SUGGESTIONS" "SPREADSHEETS" "TIPS" "BOOKMARKS"
-  ];
-  spotlightItem = enabled: name:
-    "'{ enabled = ${if enabled then "1" else "0"}; name = \"${name}\"; }'";
-  spotlightItems = lib.concatStringsSep " " (
-    map (spotlightItem true) spotlightShown ++ map (spotlightItem false) spotlightHidden
-  );
-
-  # SMAppService "open at login" helpers to keep disabled. Their Background Task
-  # Management disposition is SIP-protected, but launchd's per-user disable
-  # override is writable and gates whether the job starts at login.
-  disabledLoginItems = [
-    "com.spotify.client.startuphelper"
-  ];
+  user = config.system.primaryUser;
+  home = config.users.users.${user}.home;
+  # Finder favorites live in the user's login session, so run mysides there.
+  mysides = ''launchctl asuser "$(id -u -- ${user})" sudo --user=${user} -- ${pkgs.mysides}/bin/mysides'';
 in
 {
   programs.zsh.enable = true;
 
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-  ];
+  fonts.packages = [ pkgs.nerd-fonts.jetbrains-mono ];
 
   system.defaults = {
     dock = {
@@ -75,13 +30,12 @@ in
       ];
 
       persistent-others = [
-        { folder = { path = "/Users/${config.system.primaryUser}/Downloads"; arrangement = "date-modified"; displayas = "folder"; showas = "grid"; }; }
+        { folder = { path = "${home}/Downloads"; arrangement = "date-modified"; displayas = "folder"; showas = "grid"; }; }
         { folder = { path = "/Applications"; displayas = "folder"; showas = "grid"; }; }
       ];
     };
 
     finder = {
-      AppleShowAllExtensions = true;
       AppleShowAllFiles = true;
       FXPreferredViewStyle = "Nlsv";
       ShowPathbar = true;
@@ -122,92 +76,11 @@ in
     };
 
     menuExtraClock.Show24Hour = true;
-
-    CustomUserPreferences = {
-      "com.apple.desktopservices" = {
-        DSDontWriteNetworkStores = true;
-        DSDontWriteUSBStores = true;
-      };
-
-      "com.apple.finder" = {
-        DesktopViewSettings.IconViewSettings.arrangeBy = "grid";
-        StandardViewSettings.IconViewSettings.arrangeBy = "grid";
-        FK_StandardViewSettings.IconViewSettings.arrangeBy = "grid";
-
-        # Finder has no per-folder sort option; this is the template new and
-        # unconfigured list-view folders inherit. Sort by date modified, newest
-        # first, with that column shown.
-        FK_DefaultListViewSettings = {
-          sortColumn = "dateModified";
-          useRelativeDates = true;
-          viewOptionsVersion = 1;
-          columns = [
-            { identifier = "name"; visible = true; ascending = true; width = 300; }
-            { identifier = "dateModified"; visible = true; ascending = false; width = 181; }
-            { identifier = "size"; visible = true; ascending = false; width = 97; }
-            { identifier = "kind"; visible = true; ascending = true; width = 115; }
-            { identifier = "dateAdded"; visible = false; ascending = false; width = 181; }
-          ];
-        };
-      };
-    };
   };
 
-  # Black wallpaper and Spotlight scoping have no declarative option; apply them
-  # in the primary user's GUI session after activation. Both are best-effort.
   system.activationScripts.postActivation.text = lib.mkAfter ''
-    uid=$(id -u ${config.system.primaryUser})
-    asuser() { launchctl asuser "$uid" sudo -u ${config.system.primaryUser} "$@"; }
-
-    asuser /usr/bin/osascript -e \
-      'tell application "System Events" to tell every desktop to set picture to "${blackWallpaper}/black.png"' || true
-
-    asuser defaults -currentHost write com.apple.Spotlight orderedItems -array ${spotlightItems} || true
-    asuser killall Spotlight || true
-
-    ${lib.concatMapStringsSep "\n    " (label: ''launchctl disable "gui/$uid/${label}" || true'') disabledLoginItems}
-
-    # Make Proton Mail the default mailto: handler (best-effort; no declarative
-    # option exists). Runs after the Homebrew step so the app is registered.
-    protonMailId=$(asuser /usr/bin/osascript -e 'id of app "Proton Mail"' 2>/dev/null || true)
-    [ -n "$protonMailId" ] && asuser ${pkgs.duti}/bin/duti -s "$protonMailId" mailto || true
-
-    # Finder sidebar: keep exactly one "Projects" favorite; drop the old "Projekty".
-    asuser ${pkgs.mysides}/bin/mysides remove Projekty >/dev/null 2>&1 || true
-    if ! asuser ${pkgs.mysides}/bin/mysides list 2>/dev/null | grep -q 'file:///Users/${config.system.primaryUser}/Projects'; then
-      asuser ${pkgs.mysides}/bin/mysides add Projects "file:///Users/${config.system.primaryUser}/Projects/" || true
+    if ! ${mysides} list 2>/dev/null | grep -qF 'file://${home}/Projects'; then
+      ${mysides} add Projects 'file://${home}/Projects/' || true
     fi
-
-    # Terminal.app: keep Option as a normal modifier on the default profile so it
-    # composes special characters (Czech layout: Option+ř -> ~) instead of sending
-    # Meta. No declarative option exists — writing the whole "Window Settings" dict
-    # via CustomUserPreferences would wipe other profiles. Go through `defaults` so
-    # the change lands in cfprefsd: editing the plist file directly never reaches a
-    # live preferences cache, and a running Terminal rewrites the file from memory
-    # on quit, silently undoing the fix. That same write-back means a Terminal open
-    # during activation needs one quit + reopen before the setting sticks. If the
-    # profile was never customized the extraction fails and we skip the write — the
-    # absent key already means false.
-    termProfile=$(asuser defaults read com.apple.Terminal "Default Window Settings" 2>/dev/null || true)
-    [ -n "$termProfile" ] || termProfile="Basic"
-    termProfileXml=$(asuser defaults export com.apple.Terminal - 2>/dev/null \
-      | plutil -extract "Window Settings.$termProfile" xml1 -o - - 2>/dev/null \
-      | plutil -replace useOptionAsMetaKey -bool false -o - - 2>/dev/null || true)
-    [ -n "$termProfileXml" ] && asuser defaults write com.apple.Terminal "Window Settings" \
-      -dict-add "$termProfile" "$termProfileXml" || true
-
-    # Force-install the Proton Pass extension in Google Chrome. Chrome only honors
-    # ExtensionInstallForcelist as a *mandatory* policy, i.e. a real file under
-    # /Library/Managed Preferences. `defaults write` can't create it there (cfprefsd
-    # treats that domain as read-only), so drop the generated plist in directly and
-    # refresh cfprefsd. Chrome then shows "managed by your organization" and the
-    # extension is non-removable; delete this block and the plist to undo.
-    # The per-user subdirectory keeps the policy on the primary user: the plain
-    # /Library/Managed Preferences path is computer-level and would force these
-    # settings on every account on this Mac, including ones this config never owns.
-    mkdir -p "/Library/Managed Preferences/${config.system.primaryUser}"
-    install -m 644 ${chromePolicy} "/Library/Managed Preferences/${config.system.primaryUser}/com.google.Chrome.plist"
-    rm -f "/Library/Managed Preferences/com.google.Chrome.plist"
-    killall cfprefsd 2>/dev/null || true
   '';
 }

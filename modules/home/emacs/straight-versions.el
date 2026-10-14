@@ -47,7 +47,6 @@
  ("prop-menu-el" . "50b102c1c0935fd3e0c465feed7f27d66b21cdf3")
  ("protobuf" . "7875e9179e46112a510194c499ee3a50778e0512")
  ("purescript-mode" . "61732e23bd33b7d0d71bc6cff84b612bd2d9dff2")
- ("python-mode" . "4e2edae21655cf5d0559b1d7df23057ade20272c")
  ("rust-mode" . "93778358b6af8ad9e123a41bc2c8c91877a9ffd5")
  ("s.el" . "7393fa6fa305403e628058c0ec78c35d610fab05")
  ("seq" . "da86da9bf111f68fb81efd466d76d53af5aebc00")

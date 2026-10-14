@@ -1,12 +1,9 @@
 { pkgs, config, ... }:
 
 let
-  # ssh-keygen offers the signature to SSH_AUTH_SOCK before it ever reads the key
-  # file, and macOS points that at launchd's agent, which cannot drive ed25519-sk
-  # and refuses outright. Drop the agent so signing goes straight to the YubiKey.
+  # launchd's ssh-agent can't drive ed25519-sk keys, so sign without it.
   signer = pkgs.writeShellScript "git-ssh-keygen" ''
-    exec ${pkgs.coreutils}/bin/env -u SSH_AUTH_SOCK \
-      ${pkgs.openssh}/bin/ssh-keygen "$@"
+    exec ${pkgs.coreutils}/bin/env -u SSH_AUTH_SOCK ${pkgs.openssh}/bin/ssh-keygen "$@"
   '';
 in
 {
@@ -20,20 +17,22 @@ in
       pull.rebase = true;
       push.autoSetupRemote = true;
 
-      # Use nixpkgs ssh (built --with-security-key-builtin) for git remotes, so
-      # the YubiKey FIDO2 key authenticates — /usr/bin/ssh has no FIDO provider.
+      # macOS's /usr/bin/ssh has no FIDO support; nixpkgs openssh does.
       core.sshCommand = "${pkgs.openssh}/bin/ssh";
+      url."git@github.com:".pushInsteadOf = "https://github.com/";
 
-      # Push over SSH so the YubiKey authenticates, even for https:// remotes.
-      url."git@github.com:".insteadOf = "https://github.com/";
-
-      # YubiKey 5 NFC — FIDO2 SSH signing (touch-to-sign). macOS's
-      # /usr/bin/ssh-keygen has no FIDO provider, so sign with nixpkgs openssh.
+      # Commits and tags are signed with the YubiKey (touch to sign).
       gpg.format = "ssh";
       gpg.ssh.program = "${signer}";
       user.signingKey = "${config.home.homeDirectory}/.ssh/id_ed25519_sk.pub";
       commit.gpgSign = true;
       tag.gpgSign = true;
+
+      # delta is the pager, difftastic the difftool (`git dft`). Home Manager
+      # refuses to enable both integrations, so the difftool is wired here.
+      diff.tool = "difftastic";
+      difftool.prompt = false;
+      difftool.difftastic.cmd = ''${pkgs.difftastic}/bin/difft "$LOCAL" "$REMOTE"'';
 
       alias = {
         s = "status -sb";
@@ -55,10 +54,8 @@ in
       "*.hi"
       "*.o"
     ];
-
   };
 
-  # delta as the git pager; difftastic wired up as `git difftool`.
   programs.delta = {
     enable = true;
     enableGitIntegration = true;
@@ -69,8 +66,5 @@ in
     };
   };
 
-  programs.difftastic = {
-    enable = true;
-    git.mode = "difftool";
-  };
+  programs.difftastic.enable = true;
 }

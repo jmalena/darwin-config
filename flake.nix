@@ -17,31 +17,23 @@
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
-  outputs = inputs@{ nix-darwin, home-manager, nix-homebrew, ... }:
+  outputs = { nix-darwin, home-manager, nix-homebrew, ... }:
     let
-      # hostname → primary user. This is the only place either name appears:
-      # every module derives its paths from the primary user or the home
-      # directory, so a new machine or account is one line here and nothing else.
+      # hostname → primary user. The only place a username appears.
       hosts = {
         eigen = "aleph";
         zweigen = "bet";
       };
 
       mkHost = hostName: user: nix-darwin.lib.darwinSystem {
-        specialArgs = { inherit inputs; };
         modules = [
-          ./hosts/common.nix
           home-manager.darwinModules.home-manager
           nix-homebrew.darwinModules.nix-homebrew
+          ./modules
           {
             networking.hostName = hostName;
-
             system.primaryUser = user;
-
-            users.users.${user} = {
-              name = user;
-              home = "/Users/${user}";
-            };
+            users.users.${user}.home = "/Users/${user}";
           }
         ];
       };
