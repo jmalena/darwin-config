@@ -83,4 +83,10 @@ if ! sudo "$system/sw/bin/darwin-rebuild" switch --flake ".#$host"; then
   die "activation failed (see above)."
 fi
 
+# Here rather than as scheduled launchd daemons, which would each add a login item.
+info "Collecting garbage…"
+sudo "$system/sw/bin/nix-collect-garbage" --delete-older-than 30d
+info "Optimising the store…"
+sudo "$system/sw/bin/nix-store" --optimise
+
 info "Done. Open a new terminal to pick up the new environment."

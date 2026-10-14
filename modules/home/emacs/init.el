@@ -23,7 +23,7 @@
 
 ;;; Environment
 
-;; launchd starts the daemon with a bare PATH; import the login shell's so
+;; Emacs launched from the Dock gets a bare PATH; import the login shell's so
 ;; Nix-installed tools such as LSP servers are found.
 (use-package exec-path-from-shell
   :config

@@ -36,8 +36,9 @@
     nix-direnv.enable = true;
   };
 
+  # `-a ''` starts the Emacs daemon on first use, so it needs no login item.
   home.sessionVariables = {
-    EDITOR = "emacsclient -t -a emacs";
-    VISUAL = "emacsclient -t -a emacs";
+    EDITOR = "emacsclient -t -a ''";
+    VISUAL = "emacsclient -t -a ''";
   };
 }

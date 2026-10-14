@@ -40,6 +40,8 @@ Apply local changes:
 ./install.sh --host eigen
 ```
 
+Each run also deletes generations older than 30 days and deduplicates the store.
+
 Update the pinned inputs in `flake.lock` and apply:
 
 ```sh

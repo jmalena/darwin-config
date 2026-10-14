@@ -1,13 +1,35 @@
+{ config, lib, pkgs, ... }:
+
+let
+  # Login Items & Extensions names a background item after its executable, and
+  # nix-darwin starts its daemons as `/bin/sh -c "wait4path …"`, so each shows
+  # up as "sh". Start them through a launcher named after the daemon instead.
+  # It lives outside /nix: launchd runs these before the store volume mounts.
+  launcherDir = "/usr/local/libexec/nix-darwin";
+  launcher = pkgs.writeScript "launcher" ''
+    #!/bin/sh
+    exec /bin/sh "$@"
+  '';
+  # The ones nix-darwin can't run without. Garbage collection and store
+  # optimisation run from install.sh instead of adding more background items.
+  daemons = [ "activate-system" "nix-daemon" ];
+in
 {
   nixpkgs.config.allowUnfree = true;
 
-  nix.gc = {
-    automatic = true;
-    interval = { Weekday = 0; Hour = 3; Minute = 0; };
-    options = "--delete-older-than 30d";
-  };
+  launchd.daemons = lib.genAttrs daemons (name: {
+    serviceConfig.ProgramArguments = lib.mkForce [
+      "${launcherDir}/${name}"
+      "-c"
+      "/bin/wait4path /nix/store && exec ${config.launchd.daemons.${name}.command}"
+    ];
+  });
 
-  nix.optimise.automatic = true;
+  # Before the launchd step, which (re)loads the daemons.
+  system.activationScripts.preActivation.text = ''
+    mkdir -p ${launcherDir}
+    ${lib.concatMapStrings (name: "install -m 755 ${launcher} ${launcherDir}/${name}\n") daemons}
+  '';
 
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
