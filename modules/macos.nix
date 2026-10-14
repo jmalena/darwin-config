@@ -3,8 +3,9 @@
 let
   user = config.system.primaryUser;
   home = config.users.users.${user}.home;
-  # Finder favorites live in the user's login session, so run mysides there.
-  mysides = ''launchctl asuser "$(id -u -- ${user})" sudo --user=${user} -- ${pkgs.mysides}/bin/mysides'';
+  # Finder favorites and app preferences live in the user's login session; run there.
+  asuser = ''launchctl asuser "$(id -u -- ${user})" sudo --user=${user} --'';
+  mysides = "${asuser} ${pkgs.mysides}/bin/mysides";
 in
 {
   programs.zsh.enable = true;
@@ -82,5 +83,18 @@ in
     if ! ${mysides} list 2>/dev/null | grep -qF 'file://${home}/Projects'; then
       ${mysides} add Projects 'file://${home}/Projects/' || true
     fi
+
+    # Terminal.app: Option composes special characters (Czech layout: Option+ř -> ~)
+    # instead of sending Meta. There's no declarative option, and writing the whole
+    # "Window Settings" dict would wipe other profiles, so patch only the default
+    # profile. Go through `defaults`: a running Terminal rewrites the plist file from
+    # memory on quit, undoing direct edits. A never-customized profile has no entry
+    # to patch, and the absent key already means false.
+    termProfile=$(${asuser} defaults read com.apple.Terminal 'Default Window Settings' 2>/dev/null || echo Basic)
+    termProfileXml=$(${asuser} defaults export com.apple.Terminal - 2>/dev/null \
+      | plutil -extract "Window Settings.$termProfile" xml1 -o - - 2>/dev/null \
+      | plutil -replace useOptionAsMetaKey -bool false -o - - 2>/dev/null || true)
+    [ -n "$termProfileXml" ] && ${asuser} defaults write com.apple.Terminal 'Window Settings' \
+      -dict-add "$termProfile" "$termProfileXml" || true
   '';
 }
